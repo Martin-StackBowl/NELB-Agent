@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* NELB custom theme */
+@theme {
+  --color-nelb-primary: #1E40AF;
+  --color-nelb-secondary: #059669;
+  --color-nelb-accent: #D97706;
+  --color-nelb-dark: #111827;
+  --color-nelb-light: #F9FAFB;
+}

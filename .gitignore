@@ -1,0 +1,18 @@
+# Backend
+backend/__pycache__/
+backend/.env
+backend/.venv/
+backend/*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
