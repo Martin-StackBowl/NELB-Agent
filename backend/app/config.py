@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     azure_ai_foundry_endpoint: str = ""
     azure_ai_foundry_api_key: str = ""
     azure_ai_foundry_deployment: str = "gpt-4o"
+    azure_ai_foundry_api_version: str = "2025-04-01-preview"
 
     # Azure Maps
     azure_maps_key: str = ""

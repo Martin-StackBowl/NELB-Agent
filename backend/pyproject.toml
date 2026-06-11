@@ -4,9 +4,9 @@ version = "0.1.0"
 description = "NELB — No Employee Left Behind: AI reasoning agent for fair job distribution"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi==0.115.6",
+    "fastapi==0.115.12",
     "uvicorn[standard]==0.34.0",
-    "pydantic==2.10.3",
+    "pydantic==2.11.0",
     "sqlalchemy[asyncio]==2.0.36",
     "asyncpg==0.30.0",
     "alembic==1.14.0",
@@ -14,7 +14,7 @@ dependencies = [
     "python-dotenv==1.0.1",
     "structlog==24.4.0",
     "httpx==0.28.1",
-    "semantic-kernel==1.15.0",
+    "semantic-kernel==1.42.0",
     "azure-identity==1.19.0",
     "azure-keyvault-secrets==4.9.0",
 ]

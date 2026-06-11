@@ -10,9 +10,9 @@
 
 NELB (No Employee Left Behind) is an intelligent reasoning agent and job distribution platform designed for the civilian gig economy at the community level. It operates as a two-sided marketplace where any person — with or without a formal degree or employment history — can either offer their skills for hire or post a job they need done. NELB sits at the intersection of Uber/Bolt's proximity-based matching model and a fairness-first employment philosophy, constrained to a specific category of low-to-mid tier civilian jobs to ensure safety, legality, and risk management.
 
-NELB is not a general job board. It is not LinkedIn. It is not a corporate recruitment tool. It is a neighbourhood-level work distribution system that ensures no single person monopolises available work in a community, while also ensuring employers quickly find the right person for their specific task.
+NELB is not a general job board. It is not LinkedIn. It is not a corporate recruitment tool. It is a neighbourhood-level work distribution system that ensures no single person monopolises available work in a community, while ensuring employers quickly find the right person for their specific task.
 
-NELB is built on Microsoft Azure AI Foundry, orchestrated by Semantic Kernel, and developed with GitHub Copilot. It is submitted under the Reasoning Agents track of the Microsoft Agents League contest at AI Skills Fest 2026.
+NELB is built on Microsoft Azure AI Foundry, orchestrated by Semantic Kernel, powered by Foundry IQ as its required Microsoft IQ intelligence layer, and developed with GitHub Copilot. It is submitted under the Reasoning Agents track of the Microsoft Agents League contest at AI Skills Fest 2026.
 
 ---
 
@@ -45,13 +45,38 @@ Jobs outside these categories are not permitted on the platform. This prevents i
 
 ## 4. How NELB works — the user experience
 
+### The NELB flow
+
+```
+Employer creates job
+       ↓
+NELB scans radius
+       ↓
+NELB performs multi-step reasoning
+  - Skills filter
+  - Reliability filter
+  - Availability filter
+  - Distance analysis
+  - Fairness analysis
+       ↓
+NELB returns top 5 ranked recommendations
+       ↓
+Employer chooses from shortlist
+       ↓
+Selected worker is notified
+       ↓
+Job completed → rated → logged
+```
+
+This is not a job board where workers browse and compete. NELB is employer-initiated: the employer posts, NELB reasons, the employer chooses, the worker receives.
+
 ### From the employer's side
 
 An employer opens the app and creates a job. They describe the task (e.g. "clean my yard"), set a budget, and confirm their location. NELB immediately scans a configurable radius (default 5km) around the employer's location and performs its full multi-step reasoning pipeline across all eligible workers. The employer then sees a map with up to 5 recommended worker circles — ranked by NELB's composite score — each clickable to view skills, ratings, job history, and the reasoning behind their ranking. The employer chooses from this shortlist and can initiate a chat or call directly. Once a worker is selected and the job is completed, payment is processed through the platform's smart payment system and a rating is recorded.
 
 ### From the worker's side
 
-A worker registers their skills, location, and availability. When an employer posts a job, NELB evaluates eligible workers and generates a ranked shortlist of up to 5 recommendations. If a worker is selected by the employer, NELB notifies the worker and facilitates communication between both parties. Workers do not browse or compete for job listings — NELB brings the work to them based on merit and fairness. Crucially, the fairness engine ensures that a worker who has already received multiple jobs recently will be ranked lower for new assignments, giving others in the community a fair turn. Workers also have access to NELB as a personal work assistant — they can ask questions about how to do a task, which tools to use, how much material to buy, safety precautions, and more.
+A worker registers their skills, location, and availability. When an employer posts a job, NELB evaluates eligible workers and generates a ranked shortlist of up to 5 recommendations. If a worker is selected by the employer, NELB notifies the worker and facilitates communication between both parties. Workers do not browse or compete for job listings — NELB brings the work to them based on merit and fairness. Crucially, the fairness engine ensures that a worker who has already received multiple jobs recently will be ranked lower for new assignments, giving others in the community a fair turn. Workers also have access to NELB as a personal work assistant — they can ask questions about how to do a task, which tools to use, how much material to buy, safety precautions, and more — with answers grounded by Foundry IQ.
 
 ### The findwork || employ duality
 
@@ -77,7 +102,7 @@ Workers with a reliability score below 50% are removed from consideration. Relia
 Workers who have marked themselves unavailable are excluded.
 
 **Step 4 — Distance analysis**
-Each remaining worker is scored by their proximity to the job location using the Haversine formula for accurate geodesic distance. Workers outside the configured radius are eliminated. Azure Maps provides travel time estimates for shortlisted candidates. Closer workers receive higher distance scores, with linear decay to zero at the radius boundary.
+Each remaining worker is scored by their proximity to the job location using the Haversine formula for fast filtering, then Azure Maps for precise travel time on shortlisted candidates. Workers outside the configured radius are eliminated. Closer workers receive higher distance scores, with linear decay to zero at the radius boundary.
 
 **Step 5 — Fairness analysis**
 This is NELB's defining feature. The system checks how many jobs each worker has completed in the past 7 days. Workers who have exceeded the fairness threshold (default: 3 jobs in 7 days) receive a penalty to their fairness score. This ensures that no single worker monopolises available work in a community.
@@ -110,7 +135,7 @@ This memory also feeds the allocation brain — the fairness engine reads from j
 
 ### Brain 3 — The Work Assistant Brain (Contextual Job Help)
 
-NELB is a buddy that travels with the worker to every job. The assistant brain answers practical, work-related questions in real time, powered by GPT-4o deployed inside Azure AI Foundry:
+NELB is a buddy that travels with the worker to every job. The assistant brain answers practical, work-related questions in real time, powered by GPT-4o deployed inside Azure AI Foundry and grounded by Foundry IQ:
 
 - "Which drill bit is right for a 6mm wall plug in brick?"
 - "How many bags of cement do I need for a 3m x 4m slab at 100mm depth?"
@@ -118,17 +143,45 @@ NELB is a buddy that travels with the worker to every job. The assistant brain a
 - "How do I remove paint from a wooden surface before repainting?"
 - "What safety precautions should I take when working with bleach indoors?"
 
-The assistant is aware of the worker's current job context and is strictly constrained to job-related civilian work topics — it will not advise on licensed electrical work, gas fitting, structural engineering, or any illegal activity.
+Instead of free-form LLM generation, the assistant brain routes queries through Foundry IQ — retrieving cited, grounded answers from the indexed knowledge store (tools, materials, safety documents). This reduces hallucination and makes answers verifiable. The assistant is strictly constrained to job-related civilian work topics — it will not advise on licensed electrical work, gas fitting, structural engineering, or any illegal activity.
 
 ---
 
-## 6. Technical architecture
+## 6. Microsoft IQ integration — Foundry IQ
+
+**IQ layer used: Foundry IQ**
+
+Foundry IQ is the agentic knowledge retrieval layer that connects multiple sources, enforces permissions, and delivers cited, grounded answers to reduce hallucination.
+
+**Why Foundry IQ and not Work IQ or Fabric IQ:**
+- Work IQ builds memory from emails, meetings, and Microsoft 365 documents. NELB's users are civilian workers who do not operate within an M365 ecosystem — Work IQ is not a natural fit.
+- Fabric IQ provides semantic intelligence over Microsoft Fabric enterprise data using ontologies and knowledge graphs. NELB does not deal with enterprise data at that scale — Fabric IQ is not a natural fit.
+- Foundry IQ directly serves NELB's assistant brain: indexed knowledge about tools, materials, safety procedures, and job techniques. Workers get cited, grounded answers instead of hallucinated guesses. This is the correct IQ layer for NELB.
+
+**How Foundry IQ is implemented in NELB:**
+
+The Foundry IQ knowledge store is the data source behind the assistant brain's work buddy capability. When a worker asks "which drill bit for a 6mm wall plug?", the assistant brain does not call GPT-4o with an open prompt. It calls Foundry IQ, retrieves relevant grounded content from the knowledge store (indexed safety and trade guides), and uses that cited content as the basis for the response.
+
+The knowledge store is indexed from three document categories:
+- Tool and equipment guides (drill types, fastener specifications, power tool safety)
+- Material calculation references (cement ratios, paint coverage, tile adhesive quantities)
+- Safety and compliance guidelines (working at height, chemical handling, electrical safety for permitted civilian tasks)
+
+This integration satisfies the contest's mandatory IQ requirement and makes the assistant brain meaningfully more reliable than a raw LLM call.
+
+---
+
+## 7. Technical architecture
+
+### Architecture diagram
+
+![NELB Architecture Diagram](./nelb_architecture_v3_foundry_iq.svg)
 
 ### Stack overview
 
 | Layer | Technology | Role |
 |-------|-----------|------|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS | Web application — employer and worker interfaces |
+| Frontend | Next.js, TypeScript, Tailwind CSS | Web application — employer and worker interfaces |
 | Maps (UI) | React Leaflet | Renders radius scan circle and worker pins on map |
 | State | Zustand | Holds job context, chat history, reasoning trace |
 | Hosting (frontend) | Vercel | One-command deploy, live preview URL for judges |
@@ -137,7 +190,8 @@ The assistant is aware of the worker's current job context and is strictly const
 | Containers | Docker + Docker Compose | Local dev environment, one-command setup |
 | AI Agent | Azure AI Foundry | NELB agent runtime — required by Reasoning Agents track |
 | Agent Service | Azure AI Agent Service | Manages state, tool calls, multi-step execution loops |
-| LLM | GPT-4o (via Foundry) | Powers Brain 3 (assistant) and explanation enrichment |
+| IQ layer | Foundry IQ | Grounded knowledge retrieval — required by contest |
+| LLM | GPT-4o (via Foundry) | Powers Brain 3 with Foundry IQ grounding |
 | Orchestration | Semantic Kernel (Python SDK) | Connects FastAPI to Foundry, defines agent tools |
 | Dev tool | GitHub Copilot | Scaffolding, engine code, tests, README — required by contest |
 | Database | Azure PostgreSQL v16 | Workers, jobs, allocations, history, reasoning logs |
@@ -153,9 +207,9 @@ The assistant is aware of the worker's current job context and is strictly const
 
 Three tools registered in the Semantic Kernel kernel:
 
-- **allocate_job** — calls the Python allocation engine, returns ranked candidates and full reasoning trace
-- **recall_memory** — queries job history with natural language intent parsing, returns structured records
-- **work_assist** — calls GPT-4o via Foundry with constrained system prompt, returns contextual help
+1. **allocate_job** — runs the Python 5-step allocation engine, returns ranked candidates and full reasoning trace
+2. **recall_memory** — queries job history with NL intent parsing, returns structured records
+3. **work_assist** — queries Foundry IQ knowledge store, returns cited grounded answers via GPT-4o
 
 ### Database tables
 
@@ -168,7 +222,7 @@ Three tools registered in the Semantic Kernel kernel:
 
 ---
 
-## 7. GitHub Copilot — role in development
+## 8. GitHub Copilot — role in development
 
 GitHub Copilot was used throughout the development of NELB as the primary AI-assisted development tool. Specific contributions:
 
@@ -183,25 +237,27 @@ GitHub Copilot is visible throughout the commit history of the public repository
 
 ---
 
-## 8. Submission-ready project description
+## 9. Submission-ready project description
 
 **Project name:** NELB — No Employee Left Behind
 
 **Track:** Reasoning Agents (Microsoft Foundry)
 
+**IQ layer:** Foundry IQ
+
 **Problem solved:** In community-level gig economies, job distribution is unfair. A few well-connected workers get most jobs. Employers have no reliable way to find nearby, vetted workers for simple tasks. Workers have no memory of their own work history and no intelligent assistant to help them do jobs better.
 
-**What NELB does:** NELB is an intelligent reasoning agent built on Microsoft Azure AI Foundry that solves fair job distribution for civilian workers. It has three brains: an Allocation Brain that runs a 5-step reasoning pipeline (skills → reliability → availability → distance → fairness) to recommend the right worker while ensuring no one monopolises work in a community; a Memory Brain that lets workers query their own job history in natural language ("who did I tile a kitchen for last year?"); and a Work Assistant Brain powered by GPT-4o that answers practical job questions in real time ("which drill bit for a 6mm wall plug?").
+**What NELB does:** NELB is an intelligent reasoning agent built on Microsoft Azure AI Foundry that solves fair job distribution for civilian workers. It has three brains: an Allocation Brain that runs a 5-step reasoning pipeline (skills → reliability → availability → distance → fairness) to recommend the right worker while ensuring no one monopolises work in a community; a Memory Brain that lets workers query their own job history in natural language ("who did I tile a kitchen for last year?"); and a Work Assistant Brain powered by GPT-4o and grounded by Foundry IQ that delivers cited, hallucination-reduced answers to practical job questions ("which drill bit for a 6mm wall plug?").
 
 Every decision NELB makes comes with a full reasoning trace — what was considered, what was eliminated, and why. This is not a chatbot. The allocation engine is real Python logic with verifiable, testable behaviour.
 
-**Technologies used:** Microsoft Azure AI Foundry (agent runtime), Azure AI Agent Service, GPT-4o, Semantic Kernel (Python orchestration), GitHub Copilot (development), Azure Maps (geospatial), Azure PostgreSQL (data), Azure App Service (hosting), FastAPI (backend), Next.js (frontend).
+**Technologies used:** Microsoft Azure AI Foundry (agent runtime), Foundry IQ (required IQ layer — grounded knowledge retrieval), Azure AI Agent Service, GPT-4o, Semantic Kernel (Python orchestration), GitHub Copilot (development), Azure Maps (geospatial), Azure PostgreSQL (data), Azure App Service (hosting), FastAPI (backend), Next.js (frontend).
 
 **Why it matters:** NELB is designed for communities where formal employment is out of reach for many. The fairness engine is not a policy statement — it is code. No employee left behind is not just a name. It is the operating principle of every algorithm in the system.
 
 ---
 
-## 9. Demo video script (5 minutes max)
+## 10. Demo video script (5 minutes max)
 
 ### Scene 1 — Problem statement (30 seconds)
 
@@ -227,36 +283,36 @@ Show the confidence score (91%) and the breakdown: skill 95%, reliability 92%, d
 
 Switch to the worker view. Worker types: "Who did I install tiles for last year?" NELB responds instantly with a record: Mrs Dlamini, Centurion, April 2025, 5-star rating, notes: "used large-format porcelain, grouted with charcoal mix." Narrate: "NELB remembers every job. Workers never lose their history."
 
-### Scene 5 — Work assistant (45 seconds)
+### Scene 5 — Work assistant with Foundry IQ (45 seconds)
 
-Worker is on site. Types: "Which drill bit do I need for a 6mm wall plug in brick?" NELB responds with a precise, practical answer — bit type, speed setting, depth guide. Narrate: "NELB is the buddy on every job site. Powered by Azure AI Foundry."
+Worker is on site. Types: "Which drill bit do I need for a 6mm wall plug in brick?" NELB responds with a cited, grounded answer pulled from the Foundry IQ knowledge store. Source is shown. Narrate: "NELB's work assistant is grounded by Foundry IQ — cited answers, not guesses. Powered by Microsoft Azure AI Foundry."
 
 ### Closing (15 seconds)
 
-Show the architecture diagram briefly. End card: "NELB — No Employee Left Behind. Built on Microsoft Azure AI Foundry. Three brains. One mission."
+Show the architecture diagram briefly. End card: "NELB — No Employee Left Behind. Azure AI Foundry · Foundry IQ · Semantic Kernel · GitHub Copilot."
 
 ---
 
-## 10. Judging criteria alignment
+## 11. Judging criteria alignment
 
 | Criterion | Weight | How NELB addresses it |
 |-----------|--------|----------------------|
-| Accuracy & relevance | 20% | Built on Azure AI Foundry as required. Allocation engine directly solves a real problem with verifiable logic. All three Foundry tool calls are functional. |
-| Reasoning & multi-step thinking | 20% | 5-step allocation pipeline is the definition of multi-step reasoning. Every step documented in the reasoning trace. Memory query parsing adds a second reasoning layer. |
-| Creativity & originality | 15% | "No Employee Left Behind" fairness principle is unique. No other platform constrains job distribution to prevent monopolisation. The three-brain architecture applied to civilian gig work is novel. |
-| User experience & presentation | 15% | Demo video follows a clear narrative. Reasoning panel is the visual centrepiece. Workers and employers both have polished, purpose-built interfaces. |
-| Reliability & safety | 20% | Job categories constrained to low-risk civilian work. Allocation engine has 9 unit tests. All decisions logged to reasoning_logs table. Azure Key Vault for secrets. Structured logging on every agent call. |
-| Community vote | 10% | Social impact narrative — fair work for underserved communities — is compelling and shareable. "No employee left behind" resonates. |
+| Accuracy & relevance | 20% | Built on Azure AI Foundry. Foundry IQ satisfies the mandatory IQ layer requirement. Allocation engine directly solves a real problem with verifiable logic. All three Foundry tool calls functional. |
+| Reasoning & multi-step thinking | 20% | 5-step allocation pipeline is textbook multi-step reasoning. Full reasoning trace documented at every step. Memory NL parsing adds a second reasoning layer. Foundry IQ retrieval adds a third. |
+| Creativity & originality | 15% | "No Employee Left Behind" fairness principle is unique. No other platform constrains job distribution to prevent monopolisation. Three-brain architecture applied to civilian gig work is novel. |
+| User experience & presentation | 15% | Reasoning panel is the visual centrepiece. Demo video follows a clear five-scene narrative. Cited assistant answers are shown with sources visible. |
+| Reliability & safety | 20% | Job categories constrained to low-risk civilian work. 9 unit tests for the allocation engine. Foundry IQ grounding reduces hallucination. Azure Key Vault for secrets. Every decision logged to reasoning_logs. |
+| Community vote | 10% | Fair work for underserved communities. "No employee left behind" is shareable and resonant. |
 
 ### Additional prize alignment
 
 - **Hack for Good:** NELB directly solves a community need — fair job distribution in informal labour markets. The fairness engine is the technical proof.
-- **Best use of IQ tools:** All three Azure AI Foundry tools (allocate, recall, assist) are original implementations, not wrappers.
-- **Best overall agent:** The combination of a constrained reasoning pipeline, natural language memory, and a contextual work assistant makes NELB one of the most complete agent submissions in the contest.
+- **Best use of IQ tools:** Foundry IQ is the core grounding layer for Brain 3, not an add-on. It is integral to how the assistant brain works.
+- **Best overall agent:** The combination of a constrained reasoning pipeline, natural language memory, and Foundry IQ grounded assistance = one of the most complete agent submissions in the contest.
 
 ---
 
-## 11. The broader context — ArtisanPool
+## 12. The broader context — ArtisanPool
 
 NELB is the AI intelligence layer within a larger application called ArtisanPool. ArtisanPool is the full platform — the marketplace, the profiles, the payment system, the employer and worker interfaces, the ratings ecosystem, and the legal framework. NELB is the brain of ArtisanPool, but it can also function as a standalone reasoning agent, which is how it is submitted to the Microsoft Agents League hackathon.
 
@@ -264,26 +320,27 @@ For the hackathon, NELB is extracted from ArtisanPool and built as an independen
 
 ---
 
-## 12. What NELB is NOT
+## 13. What NELB is NOT
 
-- NELB is not a chatbot. It is a reasoning agent with structured logic pipelines.
-- NELB is not a general job board (LinkedIn, Indeed, etc.)
-- NELB is not for professional or licensed trade work beyond basic civilian tasks.
-- NELB is not a social network.
-- NELB does not operate on prompt-only AI responses. Its allocation engine is real code with real logic.
-- NELB does not allow one person to dominate job distribution in a community. The fairness engine is non-negotiable.
+- Not a chatbot. A reasoning agent with structured logic pipelines.
+- Not a general job board (LinkedIn, Indeed, etc.)
+- Not for professional or licensed trade work beyond basic civilian tasks.
+- Not a social network or payment-only app.
+- Not prompt-only AI. The allocation engine is real code with real logic.
+- Not unfair. The fairness engine is non-negotiable.
 
 ---
 
-## 13. Design principles
+## 14. Design principles
 
 1. **Fairness is structural, not aspirational.** The fairness engine is code, not a policy statement.
 2. **Explainability is mandatory.** Every decision NELB makes comes with a reasoning trace. No black boxes.
-3. **Memory makes NELB a companion, not a tool.** Workers should feel that NELB knows their history and works for them.
-4. **Constraint enables trust.** By limiting job categories, NELB earns the trust of both employers and workers.
-5. **Both sides of the market matter equally.** Employer experience and worker experience are designed with equal care.
-6. **Every person deserves a fair shot.** No employee left behind is not just a name — it is the operating principle of every algorithm in the system.
+3. **Grounded answers, not guesses.** Foundry IQ ensures the assistant brain cites its sources.
+4. **Memory makes NELB a companion, not a tool.** Workers should feel that NELB knows their history and works for them.
+5. **Constraint enables trust.** By limiting job categories, NELB earns the trust of both employers and workers.
+6. **Both sides of the market matter equally.** Employer experience and worker experience are designed with equal care.
+7. **Every person deserves a fair shot.** No employee left behind is not just a name — it is the operating principle of every algorithm in the system.
 
 ---
 
-*This document is the authoritative system statement and submission kit for NELB. Version 2 — updated to include GitHub Copilot role, demo video script, submission-ready project description, and full judging criteria alignment. Feed it to any AI agent, code generator, designer, or collaborator working on any part of the NELB or ArtisanPool system.*
+*This document is the authoritative system statement and submission kit for NELB. Version 3 — includes Foundry IQ as the required Microsoft IQ intelligence layer, employer-initiated flow (NELB recommends, employer chooses), updated architecture, demo script, and full judging criteria alignment. Feed it to any AI agent, code generator, designer, or collaborator working on any part of the NELB or ArtisanPool system.*
