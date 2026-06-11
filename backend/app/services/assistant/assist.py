@@ -114,19 +114,53 @@ async def work_assist(request: AssistRequest) -> AssistResponse:
             
             result = response.json()
             print(f"[Brain 3] Response keys: {list(result.keys())}")
+            print(f"[Brain 3] Full result structure: {json.dumps(result, indent=2)[:1000]}...")
             
             # Extract answer and citations
             message = result.get("choices", [{}])[0].get("message", {})
-            answer = message.get("content", "No answer generated.")
+            raw_answer = message.get("content", "No answer generated.")
             
-            citations = []
-            citation_details = []
+            print(f"[Brain 3] Raw answer length: {len(raw_answer)}")
+            print(f"[Brain 3] Raw answer preview: {raw_answer[:300]}...")
+            print(f"[Brain 3] Raw answer end: ...{raw_answer[-300:]}")
+            
+            # Clean up raw citation markers that Azure appends at the end
+            # Pattern: lines like "1|📄 Title|source" or just "1|Title|source"
+            import re
+            lines = raw_answer.split("\n")
+            cleaned_lines = []
+            
+            for line in lines:
+                stripped = line.strip()
+                # Match citation pattern: starts with digit(s), has pipes, may have emoji
+                if re.match(r'^\d+\|.*\|.*$', stripped):
+                    print(f"[Brain 3] Skipping citation line: {stripped}")
+                    continue
+                cleaned_lines.append(line)
+            
+            answer = "\n".join(cleaned_lines).strip()
+            
+            # Extract which citations are actually used in the answer
+            import re
+            used_citations = set()
+            for match in re.finditer(r'\[doc(\d+)\]', answer):
+                used_citations.add(int(match.group(1)))
+            
+            print(f"[Brain 3] Citations used in answer: {sorted(used_citations)}")
+            
+            # First pass: extract all documents and deduplicate by title
             context = message.get("context", {})
+            azure_to_doc_title = {}  # Azure index -> document title
+            doc_title_to_display = {}  # Document title -> display index
+            display_index = 1
+            
             if context and "citations" in context:
-                seen_sources = set()
                 for i, c in enumerate(context["citations"], 1):
+                    if i not in used_citations:
+                        continue
+                    
                     content = c.get("content", "")
-                    # Extract document title from content (our docs start with # Title)
+                    # Extract document title from content
                     lines = content.strip().split("\n")
                     doc_title = "trade-guide"
                     for line in lines[:5]:
@@ -137,16 +171,40 @@ async def work_assist(request: AssistRequest) -> AssistResponse:
                             doc_title = line[3:].strip()
                             break
                     
-                    # Deduplicate citations by title
-                    if doc_title not in seen_sources:
-                        seen_sources.add(doc_title)
-                        citation_details.append({
-                            "index": len(citation_details) + 1,
-                            "filename": doc_title,
-                            "content": content[:200],
-                        })
-                    citations.append(doc_title)
-                print(f"[Brain 3] Found {len(citation_details)} unique citations")
+                    azure_to_doc_title[i] = doc_title
+                    
+                    # Assign display index only to unique documents
+                    if doc_title not in doc_title_to_display:
+                        doc_title_to_display[doc_title] = display_index
+                        display_index += 1
+            
+            # Build azure index -> display index mapping
+            azure_to_display = {}
+            for azure_idx, doc_title in azure_to_doc_title.items():
+                azure_to_display[azure_idx] = doc_title_to_display[doc_title]
+            
+            print(f"[Brain 3] Azure to display mapping: {azure_to_display}")
+            print(f"[Brain 3] Unique documents: {doc_title_to_display}")
+            
+            # Renumber citations in answer to match unique documents
+            def renumber_citation(match):
+                azure_num = int(match.group(1))
+                return f"[doc{azure_to_display.get(azure_num, azure_num)}]"
+            
+            answer = re.sub(r'\[doc(\d+)\]', renumber_citation, answer)
+            
+            # Build citation cards (one per unique document)
+            citations = []
+            citation_details = []
+            for doc_title, display_idx in sorted(doc_title_to_display.items(), key=lambda x: x[1]):
+                citation_details.append({
+                    "index": display_idx,
+                    "filename": doc_title,
+                    "content": "",  # We don't show preview in cards
+                })
+                citations.append(doc_title)
+            
+            print(f"[Brain 3] Final {len(citation_details)} unique citation cards")
             
             source = "foundry_iq"
             category = _detect_category(request.question)
