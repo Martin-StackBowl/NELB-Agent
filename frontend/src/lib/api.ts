@@ -82,6 +82,7 @@ export interface AssistResponse {
   answer: string;
   source: string;
   category: string;
+  citations: Array<{ index: number; filename: string; content: string }>;
 }
 
 // --- API functions ---

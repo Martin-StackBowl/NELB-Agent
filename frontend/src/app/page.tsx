@@ -15,6 +15,12 @@ export default function Home() {
 
         <div className="flex gap-4 justify-center pt-4">
           <a
+            href="/agent"
+            className="px-6 py-3 bg-nelb-dark text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+          >
+            Talk to NELB
+          </a>
+          <a
             href="/employer"
             className="px-6 py-3 bg-nelb-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >

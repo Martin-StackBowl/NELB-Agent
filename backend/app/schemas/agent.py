@@ -84,5 +84,6 @@ class AssistRequest(BaseModel):
 
 class AssistResponse(BaseModel):
     answer: str
-    source: str = Field(default="foundry", description="'foundry' or 'demo'")
+    source: str = Field(default="foundry", description="'foundry_iq', 'foundry', or 'demo'")
     category: str = Field(default="", description="Detected topic category")
+    citations: list[dict] = Field(default_factory=list, description="Source citations from knowledge base")

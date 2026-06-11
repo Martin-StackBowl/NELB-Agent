@@ -10,11 +10,17 @@ class Settings(BaseSettings):
     # Azure AI Foundry
     azure_ai_foundry_endpoint: str = ""
     azure_ai_foundry_api_key: str = ""
-    azure_ai_foundry_deployment: str = "gpt-4o"
+    azure_ai_foundry_deployment: str = "o4-mini"  # Reasoning model for agent
+    azure_ai_foundry_deployment_chat: str = "gpt-4o-mini"  # Chat model for knowledge base
     azure_ai_foundry_api_version: str = "2025-04-01-preview"
 
     # Azure Maps
     azure_maps_key: str = ""
+
+    # Azure AI Search (Foundry IQ knowledge base)
+    azure_search_endpoint: str = ""
+    azure_search_key: str = ""
+    azure_search_knowledge_base: str = "nelb-work-guides"
 
     # Supabase Auth
     supabase_url: str = ""

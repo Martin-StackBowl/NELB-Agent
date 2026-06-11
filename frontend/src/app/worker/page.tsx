@@ -4,6 +4,29 @@ import { useState } from "react";
 import { useWorkerStore } from "@/lib/store";
 import { recallMemory, workAssist } from "@/lib/api";
 
+/** Renders text with [doc1], [doc2] etc replaced by styled superscript badges */
+function CitedContent({ content }: { content: string }) {
+  const parts = content.split(/(\[doc\d+\])/g);
+  return (
+    <span className="whitespace-pre-wrap">
+      {parts.map((part, i) => {
+        const match = part.match(/^\[doc(\d+)\]$/);
+        if (match) {
+          return (
+            <sup
+              key={i}
+              className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-[10px] font-medium bg-nelb-primary text-white rounded"
+            >
+              {match[1]}
+            </sup>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
 export default function WorkerPage() {
   const store = useWorkerStore();
   const [input, setInput] = useState("");
@@ -30,7 +53,8 @@ export default function WorkerPage() {
           job_context: "",
         });
         store.setAssistResult(result);
-        store.addChatMessage("nelb", result.answer);
+        // Add answer with citation data attached
+        store.addChatMessage("nelb", result.answer, result.citations);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
@@ -110,14 +134,33 @@ export default function WorkerPage() {
               msg.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
-            <div
-              className={`max-w-[80%] px-4 py-2 rounded-lg text-sm whitespace-pre-wrap ${
-                msg.role === "user"
-                  ? "bg-nelb-secondary text-white"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {msg.content}
+            <div className="max-w-[80%]">
+              <div
+                className={`px-4 py-2 rounded-lg text-sm ${
+                  msg.role === "user"
+                    ? "bg-nelb-secondary text-white"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                <CitedContent content={msg.content} />
+              </div>
+              {/* Citation cards */}
+              {msg.citations && msg.citations.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {msg.citations.map((c) => (
+                    <div
+                      key={c.index}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-white border rounded text-xs text-gray-600"
+                    >
+                      <span className="font-medium text-nelb-primary">{c.index}</span>
+                      <span className="text-gray-300">|</span>
+                      <span>📄 {c.filename}</span>
+                      <span className="text-gray-300">|</span>
+                      <span className="text-gray-400">nelb-trade-guides</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}

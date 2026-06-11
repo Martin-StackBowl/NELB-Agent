@@ -81,7 +81,7 @@ interface WorkerState {
   assistResult: AssistResponse | null;
 
   // Chat history
-  chatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number }>;
+  chatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
 
   isLoading: boolean;
   error: string | null;
@@ -90,7 +90,7 @@ interface WorkerState {
   setWorker: (id: string, name: string) => void;
   setRecallResult: (result: RecallResponse) => void;
   setAssistResult: (result: AssistResponse) => void;
-  addChatMessage: (role: "user" | "nelb", content: string) => void;
+  addChatMessage: (role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }
@@ -107,11 +107,11 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   setWorker: (id, name) => set({ workerId: id, workerName: name }),
   setRecallResult: (result) => set({ recallResult: result, isLoading: false }),
   setAssistResult: (result) => set({ assistResult: result, isLoading: false }),
-  addChatMessage: (role, content) =>
+  addChatMessage: (role, content, citations) =>
     set((state) => ({
       chatHistory: [
         ...state.chatHistory,
-        { role, content, timestamp: Date.now() },
+        { role, content, timestamp: Date.now(), citations },
       ],
     })),
   setLoading: (loading) => set({ isLoading: loading, error: null }),
