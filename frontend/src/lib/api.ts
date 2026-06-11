@@ -121,3 +121,25 @@ export async function workAssist(
 ): Promise<AssistResponse> {
   return post<AssistResponse>("/api/agent/assist", request);
 }
+
+// --- Agent /run endpoint (unified natural language interface) ---
+
+export interface RunRequest {
+  message: string;
+  latitude?: number;
+  longitude?: number;
+  radius_km?: number;
+  worker_id?: string;
+  job_context?: string;
+}
+
+export interface RunResponse {
+  tool_used: string;
+  response: string;
+  raw_result: AllocationResponse | RecallResponse | AssistResponse | null;
+}
+
+/** Unified agent endpoint — send natural language, agent decides which tool to call. */
+export async function runAgent(request: RunRequest): Promise<RunResponse> {
+  return post<RunResponse>("/api/agent/run", request);
+}

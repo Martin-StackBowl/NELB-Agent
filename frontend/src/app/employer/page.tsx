@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useJobStore } from "@/lib/store";
 import { allocateJob } from "@/lib/api";
 
+// Lazy load the map to avoid SSR issues with Leaflet
+import dynamic from "next/dynamic";
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
+
 const JOB_CATEGORIES = [
   "cleaning",
   "gardening",
@@ -19,6 +23,10 @@ const JOB_CATEGORIES = [
 export default function EmployerPage() {
   const store = useJobStore();
   const [submitted, setSubmitted] = useState(false);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    store.setJobDetails({ latitude: lat, longitude: lng });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +47,9 @@ export default function EmployerPage() {
       store.setAllocation(result);
       setSubmitted(true);
     } catch (err) {
-      store.setError(err instanceof Error ? err.message : "Something went wrong");
+      store.setError(
+        err instanceof Error ? err.message : "Something went wrong"
+      );
     }
   };
 
@@ -58,7 +68,7 @@ export default function EmployerPage() {
       </header>
 
       {!submitted ? (
-        <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
+        <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -114,23 +124,19 @@ export default function EmployerPage() {
             />
           </div>
 
-          {/* Location (simplified for now) */}
+          {/* Map picker */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Your location
+              Your location — click the map to set
             </label>
-            <input
-              type="text"
-              value={store.address}
-              onChange={(e) =>
-                store.setJobDetails({ address: e.target.value })
-              }
-              placeholder="e.g. Hatfield, Pretoria"
-              className="w-full border rounded-lg px-3 py-2"
-            />
+            <MapPicker
+                latitude={store.latitude}
+                longitude={store.longitude}
+                radiusKm={store.radiusKm}
+                onLocationSelect={handleLocationSelect}
+              />
             <p className="text-xs text-gray-400 mt-1">
-              Using default Pretoria coordinates for demo. Map picker coming
-              soon.
+              Selected: {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
             </p>
           </div>
 
@@ -175,7 +181,8 @@ export default function EmployerPage() {
                 </span>
                 <span className="text-gray-500">confidence</span>
                 <span className="text-sm text-gray-400 ml-auto">
-                  {store.allocation.total_candidates_evaluated} workers evaluated
+                  {store.allocation.total_candidates_evaluated} workers
+                  evaluated
                 </span>
               </div>
 
