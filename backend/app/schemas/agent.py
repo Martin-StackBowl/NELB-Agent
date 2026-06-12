@@ -88,3 +88,20 @@ class AssistResponse(BaseModel):
     source: str = Field(default="foundry", description="'foundry_iq', 'foundry', or 'demo'")
     category: str = Field(default="", description="Detected topic category")
     citations: list[dict] = Field(default_factory=list, description="Source citations from knowledge base")
+
+
+# --- Unified Agent (Natural Language Interface) ---
+
+class RunRequest(BaseModel):
+    message: str = Field(..., description="Natural language message from user")
+    latitude: float | None = None
+    longitude: float | None = None
+    radius_km: float | None = None
+    worker_id: UUID | None = None
+    job_context: str = Field(default="", description="Optional job context")
+
+
+class RunResponse(BaseModel):
+    tool_used: str = Field(..., description="Which tool was called: allocate_job, recall_memory, work_assist, or none")
+    response: str = Field(..., description="Natural language response to the user")
+    raw_result: AllocationResponse | RecallResponse | AssistResponse | None = Field(default=None, description="Raw result from the tool")

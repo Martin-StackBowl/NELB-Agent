@@ -11,6 +11,8 @@ from app.schemas.agent import (
     RecallResponse,
     AssistRequest,
     AssistResponse,
+    RunRequest,
+    RunResponse,
 )
 from app.services.allocation.engine import allocate_job
 from app.services.memory.recall import recall_memory
@@ -37,4 +39,12 @@ async def recall(request: RecallRequest, db: AsyncSession = Depends(get_db)):
 async def assist(request: AssistRequest):
     """Brain 3 — Answer a work-related question using GPT-4o with constrained context."""
     result = await work_assist(request)
+    return result
+
+
+@router.post("/run", response_model=RunResponse)
+async def run(request: RunRequest, db: AsyncSession = Depends(get_db)):
+    """Unified Agent — Natural language interface to all three brains using o4-mini orchestrator."""
+    from app.services.agent.orchestrator import run_agent
+    result = await run_agent(request, db)
     return result
