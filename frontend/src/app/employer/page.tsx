@@ -8,6 +8,29 @@ import { allocateJob } from "@/lib/api";
 import dynamic from "next/dynamic";
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
+/** Renders text with [doc1], [doc2] etc replaced by styled superscript badges */
+function CitedContent({ content }: { content: string }) {
+  const parts = content.split(/(\[doc\d+\])/g);
+  return (
+    <span className="whitespace-pre-wrap">
+      {parts.map((part, i) => {
+        const match = part.match(/^\[doc(\d+)\]$/);
+        if (match) {
+          return (
+            <sup
+              key={i}
+              className="inline-flex items-center justify-center w-4 h-4 ml-0.5 text-[10px] font-medium bg-nelb-primary text-white rounded"
+            >
+              {match[1]}
+            </sup>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
 const JOB_CATEGORIES = [
   "cleaning",
   "gardening",
@@ -188,7 +211,12 @@ export default function EmployerPage() {
 
               {/* Reasoning trace */}
               <div className="bg-white border rounded-lg p-5">
-                <h2 className="font-semibold text-lg mb-3">Reasoning trace</h2>
+                <div className="flex items-center gap-2 mb-3">
+                  <h2 className="font-semibold text-lg">Allocation Pipeline</h2>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    ⚙️ Python deterministic reasoning
+                  </span>
+                </div>
                 <div className="space-y-3">
                   {store.allocation.reasoning_trace.map((step) => (
                     <div
@@ -264,11 +292,39 @@ export default function EmployerPage() {
                 </div>
               </div>
 
-              {/* Explanation */}
+              {/* Explanation with Foundry IQ enrichment */}
               <div className="bg-gray-50 border rounded-lg p-4">
-                <p className="text-sm text-gray-700">
-                  {store.allocation.explanation}
-                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-sm font-semibold text-gray-700">Decision Explanation</h3>
+                  {store.allocation.citations && store.allocation.citations.length > 0 && (
+                    <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded border">
+                      📖 Grounded by Foundry IQ
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                  <CitedContent content={store.allocation.explanation} />
+                </div>
+                {/* Citation cards */}
+                {store.allocation.citations && store.allocation.citations.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs text-gray-500 mb-2">Sources:</p>
+                    <div className="space-y-2">
+                      {store.allocation.citations.map((c) => (
+                        <div
+                          key={c.index}
+                          className="flex items-center gap-2 px-3 py-2 bg-white border rounded text-xs text-gray-600"
+                        >
+                          <span className="font-medium text-nelb-primary">{c.index}</span>
+                          <span className="text-gray-300">|</span>
+                          <span>📄 {c.filename}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-gray-400">nelb-allocation-criteria</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button

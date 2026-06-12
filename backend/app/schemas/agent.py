@@ -48,6 +48,7 @@ class AllocationResponse(BaseModel):
     explanation: str
     confidence: float
     total_candidates_evaluated: int
+    citations: list[dict] = Field(default_factory=list, description="Foundry IQ citations explaining decisive factors")
 
 
 # --- Memory Recall (Brain 2) ---

@@ -48,6 +48,7 @@ export interface AllocationResponse {
   explanation: string;
   confidence: number;
   total_candidates_evaluated: number;
+  citations: Array<{ index: number; filename: string; content: string }>;
 }
 
 export interface RecallRequest {

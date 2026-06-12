@@ -195,7 +195,7 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
     scored_workers.sort(key=lambda w: w.composite_score, reverse=True)
     top_recommendations = scored_workers[:settings.max_recommendations]
 
-    # Generate explanation
+    # Generate base explanation
     if top_recommendations:
         best = top_recommendations[0]
         explanation = (
@@ -209,11 +209,16 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
     else:
         explanation = f"No eligible workers found within {radius}km for category '{job_category}'. Evaluated {total_evaluated} workers."
         confidence = 0.0
+    
+    # Enrich with Foundry IQ if applicable
+    from app.services.allocation.enrichment import enrich_with_foundry_iq
+    enriched_explanation, citations = await enrich_with_foundry_iq(top_recommendations, explanation)
 
     return AllocationResponse(
         recommendations=top_recommendations,
         reasoning_trace=reasoning_steps,
-        explanation=explanation,
+        explanation=enriched_explanation,
         confidence=round(confidence, 2),
         total_candidates_evaluated=total_evaluated,
+        citations=citations,
     )
