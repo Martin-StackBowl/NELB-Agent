@@ -229,7 +229,7 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         )
         confidence = best.composite_score / 100.0
     else:
-        explanation = f"No eligible workers found within {radius}km for category '{job_category}'. Evaluated {total_evaluated} workers."
+        explanation = f"No workers found within {radius}km of your current location for '{job_category}'. The allocation engine ran correctly — your location is simply outside the area where this demo's worker community is based. Move your pin to the Pretoria, South Africa area to see NELB reason over a full candidate pool."
         confidence = 0.0
     
     # Enrich with Foundry IQ if applicable

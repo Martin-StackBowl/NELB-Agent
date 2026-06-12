@@ -2,9 +2,10 @@
 
 An intelligent reasoning agent for fair job distribution in community-level gig economies.
 
-**Built on:** Microsoft Azure AI Foundry (o4-mini, gpt-4o-mini)  
-**IQ Layer:** Foundry IQ (knowledge retrieval with citations)  
-**Developed with:** GitHub Copilot
+**Built on:** Microsoft Azure AI Foundry (o4-mini reasoning model, gpt-4o-mini chat model)  
+**IQ Layer:** Foundry IQ (Azure AI Search — grounded knowledge retrieval with citations)  
+**Developed with:** GitHub Copilot  
+**Demo location:** Pretoria, South Africa (all seed data is set in the greater Pretoria area)
 
 **🏆 Track:** Reasoning Agents — Microsoft Agents League @ AI Skills Fest 2026
 
@@ -12,108 +13,145 @@ An intelligent reasoning agent for fair job distribution in community-level gig 
 
 ## 🎯 The Problem
 
-Community-level gig economies suffer from job monopolisation—top-performing workers capture most opportunities while others struggle for income. Traditional allocation systems optimize purely for quality, creating extreme income inequality.
+In community-level gig economies — particularly across the Global South — a well-connected few capture most of the available jobs. Workers with skills but no visibility get left behind. Employers have no reliable way to find vetted, nearby workers for simple tasks. There is no memory of past work relationships. And there is no system ensuring work distribution stays fair.
 
-NELB solves this with **transparent, multi-step reasoning** that balances skills, reliability, proximity, and fairness.
+NELB solves all of this with a single reasoning agent that makes **transparent, explainable decisions** — every recommendation comes with a full reasoning trace showing what was considered, what was eliminated, and why.
 
 ---
 
-## 🧠 Three Reasoning Brains
+## 🧠 Four Reasoning Brains
 
-### 1. Allocation Brain (Deterministic Reasoning + Foundry IQ)
-**5-step reasoning pipeline:**
-1. **Skills Filter** — Match job requirements to worker capabilities
-2. **Reliability Filter** — Eliminate workers below 50% completion rate
-3. **Availability Filter** — Check schedule conflicts
-4. **Distance Analysis** — Score by proximity using Haversine formula
-5. **Fairness Analysis** — Penalize workers with recent job concentration
+NELB's agent has four tools. The o4-mini reasoning model decides which to call based on natural language input.
 
-**Output:** Top 5 ranked workers with composite scores, full reasoning trace, and **Foundry IQ enrichment** explaining the decisive factor.
+### Brain 1 — Allocation Engine (Deterministic Python + Foundry IQ Enrichment)
 
-**Example:**
-```
-Recommended: Sarah (91% confidence)
+A 6-step reasoning pipeline that finds the best workers for a job:
 
-Allocation Pipeline ⚙️ Python deterministic reasoning:
-Step 1: Skills filter → 8 candidates
-Step 2: Reliability filter → 7 candidates
-...
+0. **Self-exclusion** — Removes the posting user from candidates (you can't hire yourself)
+1. **Skills Filter** — Match job category to worker skills (general repair = partial 0.7 match)
+2. **Reliability Filter** — Remove workers below 50% reliability score
+3. **Availability Filter** — Exclude unavailable workers
+4. **Distance Analysis** — Score by proximity using Haversine formula (linear decay to 0 at radius boundary)
+5. **Fairness Analysis** — Penalize workers with 3+ jobs in the last 7 days
 
-Decision Explanation 📖 Grounded by Foundry IQ:
-Why Sarah was prioritized: Fairness scoring gave Sarah priority
-because she has 0 recent jobs while James received 4 jobs in 
-the past 7 days [1].
+**Composite scoring:** Skill 30% + Reliability 25% + Distance 25% + Fairness 20%
 
-Sources:
-1 | 📄 Why Fairness Weighting Matters | nelb-allocation-criteria
-```
+**Foundry IQ enrichment:** After the Python engine decides, it queries the knowledge base to explain *why* the decisive factor mattered — returning cited reasoning grounded in documented allocation criteria.
 
-### 2. Memory Brain (Natural Language Recall)
+### Brain 2 — Memory Recall (Natural Language → SQL)
+
 Workers query their job history in natural language:
 - "Who did I tile a kitchen for last year?"
-- "Show me my painting jobs in Pretoria"
+- "How many cleaning jobs did I do in the last 3 months?"
+- "What was my rating on my last plumbing job?"
 
-Parses intent, extracts filters, returns matching job records from PostgreSQL.
+Parses intent (category, time period, client hints), builds dynamic SQLAlchemy queries, returns structured records with natural language answers.
 
-### 3. Assistant Brain (Foundry IQ Knowledge Retrieval)
-Answers practical work questions using **Azure AI Search + gpt-4o-mini**:
-- "Which drill bit for a 6mm wall plug?"
-- "How do I fix a dripping tap?"
+### Brain 3 — Work Assistant (Foundry IQ Knowledge Retrieval)
 
-Retrieves from curated knowledge base (11 trade guides), returns **cited, grounded answers** to reduce hallucination.
+Answers practical work questions using Azure AI Search + gpt-4o-mini:
+- "Which drill bit for a 6mm wall plug in brick?"
+- "How many bags of cement for a 3m x 4m slab at 100mm depth?"
+- "What safety precautions when working with bleach indoors?"
+
+Retrieves from 12 curated trade guides indexed in Azure AI Search. Returns **cited, grounded answers** with `[doc1]`, `[doc2]` notation and source cards. Refuses licensed/dangerous work topics.
+
+### Brain 4 — Profile Lookup (Direct Database Query)
+
+Returns the authenticated worker's profile data:
+- "What's my reliability score?"
+- "What are my skills?"
+- "Am I available for work?"
+
+Queries the PostgreSQL workers table directly — skills, reliability, availability, total jobs, recent job count, average rating. Everything shown on the profile page is queryable through the agent.
 
 ---
 
-## 🤖 Natural Language Orchestrator
+## 🤖 Natural Language Orchestrator (o4-mini)
 
-**Unified interface using o4-mini:**
+Users talk to NELB in natural language. The o4-mini reasoning model decides which brain to invoke:
 
-User types natural language → **o4-mini reasoning model** decides which brain to call:
+```
+"I need someone to clean my yard, budget R500"
+→ o4-mini extracts: {category: "cleaning", budget: 500, location: [from map]}
+→ Calls Brain 1 (Allocation)
+→ Returns 5 ranked workers + reasoning trace + Foundry IQ explanation
 
-```bash
-"Find me a plumber near Hatfield with budget R600"
-→ o4-mini extracts: {category: "plumbing", location: Hatfield, budget: 600}
-→ Calls Allocation Brain
-→ Returns ranked workers with Foundry IQ explanations
+"Who did I paint for last year?"
+→ o4-mini identifies: job history query
+→ Calls Brain 2 (Memory)
+→ Returns matching records from PostgreSQL
 
 "Which drill bit for a 6mm wall plug?"
-→ o4-mini identifies: work assistance question
-→ Calls Assistant Brain (Foundry IQ)
+→ o4-mini identifies: practical work question
+→ Calls Brain 3 (Foundry IQ)
 → Returns cited answer from knowledge base
+
+"What's my reliability score?"
+→ o4-mini identifies: profile data request
+→ Calls Brain 4 (Profile Lookup)
+→ Returns worker stats from database
 ```
 
-**Endpoints:**
-- `/api/agent/allocate` — Direct allocation (structured input)
-- `/api/agent/recall` — Direct memory recall
-- `/api/agent/assist` — Direct work assistance
-- `/api/agent/run` — **Natural language orchestrator** (o4-mini routes automatically)
+This is **multi-step reasoning at multiple levels**: o4-mini reasons about intent and tool selection, the Python engine reasons through allocation constraints, and Foundry IQ retrieves grounded explanations.
 
 ---
 
 ## 🎓 Foundry IQ Integration
 
-### Knowledge Base (Azure AI Search)
-**12 curated documents:**
-- 11 trade guides (plumbing, electrical, carpentry, etc.)
-- 1 allocation criteria document (explains reasoning behind each factor)
+### Knowledge Base (Azure AI Search Index: `nelb-trade-guides`)
 
-### How Foundry IQ is Used:
+**12 indexed documents:**
+- Tool and equipment guides (drill types, fastener specs, power tool safety)
+- Material calculation references (cement ratios, paint coverage, tile adhesive quantities)
+- Safety and compliance guidelines (working at height, chemical handling)
+- Allocation criteria documentation (explains each scoring factor)
 
-**1. Assistant Brain (Brain 3):**
-- User asks work question
-- gpt-4o-mini queries Azure AI Search with `data_sources` parameter
-- Retrieves relevant chunks from trade guides
-- Synthesizes cited answer with `[doc1]`, `[doc2]` notation
-- Returns grounded response with citation cards
+### Two Integration Points:
 
-**2. Allocation Enrichment (Brain 1):**
-- Python engine completes allocation decision
-- Identifies **decisive factor** (biggest score difference between winner and runner-up)
-- Queries Foundry IQ: "Why does [distance/fairness/reliability] matter?"
-- Retrieves explanation from `nelb-allocation-criteria.md`
-- Appends grounded context with citations to allocation response
+**1. Brain 3 — Work Assistant:**
+- gpt-4o-mini queries Azure AI Search via the `data_sources` API parameter
+- Retrieves relevant chunks from indexed trade guides
+- Synthesizes cited answer — every claim is traceable to a source document
+- Citation cards displayed in the UI with document names
 
-**Result:** Every decision is explained with **documented reasoning**, not LLM invention.
+**2. Brain 1 — Allocation Enrichment:**
+- After the Python engine makes its decision, identifies the **decisive factor** (biggest score gap between #1 and #2)
+- Queries Foundry IQ: "Why does [distance/fairness/reliability] matter for worker allocation?"
+- Appends grounded explanation with citations to the allocation response
+- Result: the employer sees not just WHO was recommended, but WHY — with documentation
+
+---
+
+## 🔐 Demo Authentication
+
+For demonstration purposes, NELB uses a simplified login system with pre-seeded worker accounts. This demonstrates context-aware agent behavior without production auth infrastructure.
+
+### How to Use
+
+1. Click **"🔐 Login"** in the top-right corner
+2. Select a demo worker:
+   - **Thabo Mabena** — Tiler, Painter, General repair
+   - **Sarah Nkosi** — Cleaner, Gardener
+   - **James Molefe** — Painter, Carpenter
+3. Explore the system from that worker's perspective
+
+### What Login Enables
+
+- **Context-aware agent** — Memory recall and profile queries work without asking for IDs
+- **Self-exclusion** — Logged-in workers won't appear in their own job allocation results
+- **Profile page** — View your data and see what the agent knows about you
+- **Natural conversations** — "What's my reliability score?" just works
+
+---
+
+## 📍 Demo Location
+
+The employer's default location is set to **Hatfield, Pretoria, South Africa** (-25.7479, 28.2293). This is your location as the employer — the center point from which NELB scans outward at your chosen radius to find workers near you. Demo workers are distributed across the greater Pretoria area to provide realistic allocation scenarios.
+
+Moving the location pin within Pretoria will produce different results — different workers fall inside or outside the radius, distance scores change, and the reasoning trace reflects the updated geometry. This demonstrates that the allocation engine is genuinely dynamic: the same worker pool produces different recommendations depending on where you are.
+
+> **If you see zero results:** No workers found within {radius}km of your current location. The allocation engine ran correctly — your location is simply outside the area where this demo's worker community is based. Move your pin to the Pretoria, South Africa area to see NELB reason over a full candidate pool.
 
 ---
 
@@ -121,43 +159,29 @@ User types natural language → **o4-mini reasoning model** decides which brain 
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  User Input (Natural Language or Structured Form)  │
-└────────────────────┬────────────────────────────────┘
-                     ↓
-        ┌────────────────────────────┐
-        │  o4-mini Orchestrator      │
-        │  (Tool Selection)          │
-        └─────────┬──────────────────┘
-                  ↓
-     ┌────────────┼────────────┐
-     ↓            ↓            ↓
-┌─────────┐  ┌─────────┐  ┌──────────────┐
-│ Brain 1 │  │ Brain 2 │  │   Brain 3    │
-│Allocate │  │ Recall  │  │   Assist     │
-└────┬────┘  └────┬────┘  └──────┬───────┘
-     │            │               │
-     ↓            ↓               ↓
-┌─────────┐  ┌─────────┐  ┌──────────────┐
-│ Python  │  │Postgres │  │Foundry IQ    │
-│ Engine  │  │  SQL    │  │(AI Search +  │
-│         │  │         │  │gpt-4o-mini)  │
-└────┬────┘  └─────────┘  └──────────────┘
-     ↓
-┌──────────────────┐
-│  Foundry IQ      │
-│  Enrichment      │
-│  (Explains       │
-│  decisive factor)│
-└──────────────────┘
+│         User Input (Natural Language / Form)         │
+└────────────────────────┬────────────────────────────┘
+                         ↓
+            ┌────────────────────────────┐
+            │   o4-mini Orchestrator     │
+            │   (Intent → Tool Selection)│
+            └────┬───────┬───────┬───────┬──┘
+                 ↓       ↓       ↓       ↓
+          ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+          │Brain1│ │Brain2│ │Brain3│ │Brain4│
+          │Alloc │ │Memory│ │Assist│ │Profil│
+          └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘
+             ↓        ↓        ↓        ↓
+          ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+          │Python│ │Postgr│ │Azure │ │Postgr│
+          │Engine│ │SQL   │ │Search│ │SQL   │
+          └──┬───┘ └──────┘ └──────┘ └──────┘
+             ↓
+          ┌──────────────┐
+          │ Foundry IQ   │
+          │ Enrichment   │
+          └──────────────┘
 ```
-
-**Flow:**
-1. User sends natural language or form data
-2. **o4-mini** (reasoning model) decides which brain to invoke
-3. **Brain 1** (Python) runs deterministic allocation → calls **Foundry IQ** for enrichment
-4. **Brain 2** (SQL) queries job history → formats with LLM
-5. **Brain 3** (Foundry IQ) retrieves from knowledge base → returns cited answers
-6. Response includes reasoning traces + grounded citations
 
 ---
 
@@ -166,112 +190,128 @@ User types natural language → **o4-mini reasoning model** decides which brain 
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL 14+
-- Azure AI Foundry account
-- Azure AI Search index
+- Docker (for PostgreSQL)
+- Azure AI Foundry account with o4-mini and gpt-4o-mini deployed
+- Azure AI Search index (`nelb-trade-guides`)
 
-### Backend Setup
+### Backend
 
 ```bash
 cd backend
 pip install -e ".[dev]"
 cp .env.example .env
-# Configure Azure credentials in .env
+# Fill in Azure credentials in .env
+
 # Start PostgreSQL
-docker-compose up db -d
-# Run migrations
-alembic upgrade head
-# Seed demo data (12 workers around Pretoria)
+docker compose up db -d
+
+# Seed demo data (12 workers, 3 employers, job history)
 python seed.py
-# Start API
-uvicorn app.main:app --reload
+
+# Start API server
+uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
 npm install
 cp .env.example .env.local
-# Configure API URL in .env.local
+# Set NEXT_PUBLIC_API_URL=http://localhost:8000
+
 npm run dev
 ```
 
-### Test Natural Language Orchestrator
+### Test the Agent
 
 ```bash
+# Allocation
 curl -X POST http://localhost:8000/api/agent/run \
   -H "Content-Type: application/json" \
-  -d '{"message": "Find me a plumber near Hatfield with budget R600"}'
+  -d '{"message": "Find me a cleaner near Hatfield, budget R500", "latitude": -25.7479, "longitude": 28.2293}'
+
+# Memory recall
+curl -X POST http://localhost:8000/api/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"message": "How many jobs have I done?", "worker_id": "e71d43bb-77ba-42cf-a914-555d0ee70753"}'
+
+# Work assistant (Foundry IQ)
+curl -X POST http://localhost:8000/api/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Which drill bit for a 6mm wall plug in brick?"}'
+
+# Profile lookup
+curl -X POST http://localhost:8000/api/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What are my skills?", "worker_id": "e71d43bb-77ba-42cf-a914-555d0ee70753"}'
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **AI Orchestration** | Azure AI Foundry (o4-mini for reasoning) |
-| **Knowledge Retrieval** | Foundry IQ (Azure AI Search + gpt-4o-mini) |
-| **Frontend** | Next.js 14, TypeScript, Tailwind CSS, React Leaflet |
-| **Backend** | FastAPI, Python 3.11, Pydantic v2 |
-| **Database** | PostgreSQL, SQLAlchemy, Alembic |
-| **Maps** | Leaflet (OpenStreetMap) |
-| **Deployment** | Docker, Docker Compose |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| AI Orchestration | Azure AI Foundry (o4-mini) | Reasoning model for intent + tool selection |
+| Knowledge Retrieval | Foundry IQ (Azure AI Search + gpt-4o-mini) | Grounded answers with citations |
+| Frontend | Next.js 15, TypeScript, Tailwind CSS v4 | Employer + worker interfaces |
+| Maps | React Leaflet + OpenStreetMap | Radius visualisation, location picker |
+| State | Zustand | Client-side state (auth, job, worker) |
+| Backend | FastAPI, Python 3.11, Pydantic v2 | REST API, agent orchestration |
+| Database | PostgreSQL 16, SQLAlchemy async, Alembic | Workers, jobs, history, allocations |
+| Containers | Docker Compose | Local development environment |
+| Tests | pytest (9 unit tests for allocation engine) | Verify scoring logic |
 
 ---
 
-## 📊 Demo Data
+## 📊 Seed Data
 
-The seed script creates:
-- **12 workers** with varied skills (cleaning, plumbing, carpentry, etc.)
-- Located around Pretoria, South Africa
-- Different reliability scores (45%-96%)
-- Varying availability and recent job counts
-- **5 job history records** for testing fairness and memory recall
+| Entity | Count | Details |
+|--------|-------|---------|
+| Workers | 12 | Varied skills, reliability (45%-96%), Pretoria area |
+| Employers | 3 | Mrs. Van Wyk, Mr. Molefe, Mrs. Dlamini |
+| Job History | 5+ | Tiling, cleaning, plumbing, painting, repairs |
+| Knowledge Docs | 12 | Trade guides indexed in Azure AI Search |
+
+Demo includes edge cases: one unavailable worker (James Moyo), one low-reliability worker (Palesa Khumalo, 45%), workers with overlapping skills, and varied recent job counts for fairness testing.
 
 ---
 
-## 🎯 Why This Matters
+## 🎯 Judging Criteria Alignment
 
-**Social Impact:**  
-In community gig economies, income concentration is a documented problem. Top 10% of workers capture 60-80% of jobs. NELB's fairness engine actively counteracts this by prioritizing workers who need work most.
+| Criterion | Weight | How NELB Addresses It |
+|-----------|--------|----------------------|
+| **Accuracy & relevance** | 20% | Foundry IQ for grounded citations. Allocation engine uses verifiable Python logic. Profile data comes from actual database queries. |
+| **Reasoning & multi-step thinking** | 20% | o4-mini selects from 4 tools. Allocation runs 6-step pipeline. Foundry IQ adds contextual explanation. Memory parses NL intent. |
+| **Creativity & originality** | 15% | Fairness engine is novel — no other platform penalizes job monopolization. Self-exclusion logic. Four-brain architecture for civilian gig work. |
+| **User experience** | 15% | Reasoning trace visualized step-by-step. Citation cards. Context-aware auth. Natural language interface to all brains. |
+| **Reliability & safety** | 20% | Job categories constrained to safe civilian work. Assistant refuses dangerous topics. 9 unit tests. Haversine distance verified. All decisions logged. |
 
-**Transparency:**  
-Every recommendation includes:
-- Full 5-step reasoning trace
-- Individual dimension scores (skill, reliability, distance, fairness)
-- Grounded explanations with citations from documented criteria
-- Auditable decision logic
+---
 
-**Reasoning Agent:**  
-NELB demonstrates multi-step reasoning at multiple levels:
-1. **o4-mini**: Intent understanding and tool selection
-2. **Python Engine**: 5-step allocation pipeline with scoring
-3. **Foundry IQ**: Contextual explanation retrieval
+## 📝 API Endpoints
+
+| Endpoint | Method | Brain | Description |
+|----------|--------|-------|-------------|
+| `/api/agent/run` | POST | All | Natural language orchestrator (o4-mini decides) |
+| `/api/agent/allocate` | POST | 1 | Direct allocation with structured input |
+| `/api/agent/recall` | POST | 2 | Direct memory recall |
+| `/api/agent/assist` | POST | 3 | Direct work assistant (Foundry IQ) |
+| `/api/agent/profile` | POST | 4 | Direct profile lookup |
+| `/health` | GET | — | Health check |
 
 ---
 
 ## 📹 Demo Video
 
-[Link to 5-minute demo video on YouTube]
-
----
-
-## 🏆 Hackathon Compliance
-
-**Track:** 🧠 Reasoning Agents  
-**IQ Layer:** ✅ Foundry IQ (knowledge retrieval with citations)  
-**Multi-step Reasoning:** ✅ 5-step allocation pipeline + enrichment  
-**Microsoft Foundry:** ✅ Azure AI Foundry (o4-mini, gpt-4o-mini)  
-**Repository:** ✅ Public GitHub with full source code  
-**Demo:** ✅ Working frontend + backend + natural language interface
+[Link to 5-minute demo video]
 
 ---
 
 ## 📝 License
 
-MIT License - Built for Microsoft Agents League @ AI Skills Fest 2026
+MIT License — Built for Microsoft Agents League @ AI Skills Fest 2026
 
 ---
 
