@@ -65,7 +65,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "recall_memory",
-            "description": "Query a worker's job history. Use when a worker asks about past jobs, clients, ratings, or work they've done before.",
+            "description": "Query a worker's job history. Use when a worker asks about past jobs, clients, ratings, or work they've done before. No worker ID needed — the system knows who is asking.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -105,13 +105,13 @@ AGENT_SYSTEM_PROMPT = """You are NELB (No Employee Left Behind), an intelligent 
 
 You have three capabilities (tools):
 1. allocate_job — Find the best workers for a job. Use when someone wants to hire/find workers.
-2. recall_memory — Look up a worker's job history. Use when someone asks about past work.
+2. recall_memory — Look up a worker's job history. Use when someone asks about past work. No worker ID needed — the system knows who is asking.
 3. work_assist — Answer practical work questions about tools, materials, safety, techniques.
 
 Rules:
 - Always use the appropriate tool. Never answer job allocation or history questions from your own knowledge.
 - For allocate_job: extract the job category, description, and budget from the message.
-- For recall_memory: pass the user's question directly as the query.
+- For recall_memory: pass the user's question directly as the query. The system automatically handles worker identification.
 - For work_assist: pass the question and any known job context.
 - If the message doesn't fit any tool, respond helpfully explaining what NELB can do.
 - Be concise. Don't repeat the full reasoning trace — just summarise the key recommendation.
@@ -201,7 +201,8 @@ async def run_agent(request: RunRequest, db: AsyncSession = Depends(get_db)):
                 )
 
             elif tool_name == "recall_memory":
-                worker_id = request.worker_id or "00000000-0000-0000-0000-000000000000"
+                # Demo: use Thabo Mabena's ID (has job history in seed data)
+                worker_id = request.worker_id or "e71d43bb-77ba-42cf-a914-555d0ee70753"
                 recall_request = RecallRequest(
                     worker_id=UUID(worker_id),
                     query=tool_args.get("query", request.message),
