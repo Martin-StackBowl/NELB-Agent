@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { runAgent, type RunResponse, type AllocationResponse } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
@@ -15,6 +16,7 @@ interface ChatMessage {
 }
 
 export default function AgentPage() {
+  const { currentUser } = useAuthStore();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +42,7 @@ export default function AgentPage() {
         latitude,
         longitude,
         radius_km: radiusKm,
+        worker_id: currentUser?.worker_id,
       });
 
       setMessages((prev) => [
@@ -123,7 +126,12 @@ export default function AgentPage() {
             <p className="text-sm">Try:</p>
             <div className="space-y-1 text-sm">
               <p className="text-nelb-primary">&ldquo;I need a cleaner for my yard, budget R500&rdquo;</p>
-              <p className="text-nelb-secondary">&ldquo;Who did I tile for last year?&rdquo;</p>
+              {currentUser && (
+                <>
+                  <p className="text-nelb-secondary">&ldquo;Who did I tile for last year?&rdquo;</p>
+                  <p className="text-gray-500">&ldquo;What&apos;s my reliability score?&rdquo;</p>
+                </>
+              )}
               <p className="text-nelb-accent">&ldquo;Which drill bit for a 6mm wall plug in brick?&rdquo;</p>
             </div>
           </div>

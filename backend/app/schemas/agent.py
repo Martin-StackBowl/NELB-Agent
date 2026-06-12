@@ -18,6 +18,7 @@ class AllocationRequest(BaseModel):
     budget: float = Field(..., gt=0, description="Budget in local currency")
     location: JobLocation
     radius_km: float = Field(default=5.0, gt=0, le=50)
+    exclude_worker_id: UUID | None = Field(default=None, description="Worker ID to exclude from allocation (self-exclusion)")
 
 
 class WorkerScore(BaseModel):
@@ -90,6 +91,28 @@ class AssistResponse(BaseModel):
     citations: list[dict] = Field(default_factory=list, description="Source citations from knowledge base")
 
 
+# --- Profile Lookup (Brain 4) ---
+
+class ProfileRequest(BaseModel):
+    worker_id: UUID
+
+
+class ProfileResponse(BaseModel):
+    worker_id: UUID
+    name: str
+    email: str
+    phone: str
+    skills: list[str]
+    reliability_score: float
+    latitude: float
+    longitude: float
+    address: str
+    is_available: bool
+    total_jobs: int
+    recent_jobs_7d: int
+    average_rating: float | None = None
+
+
 # --- Unified Agent (Natural Language Interface) ---
 
 class RunRequest(BaseModel):
@@ -102,6 +125,6 @@ class RunRequest(BaseModel):
 
 
 class RunResponse(BaseModel):
-    tool_used: str = Field(..., description="Which tool was called: allocate_job, recall_memory, work_assist, or none")
+    tool_used: str = Field(..., description="Which tool was called: allocate_job, recall_memory, work_assist, profile_lookup, or none")
     response: str = Field(..., description="Natural language response to the user")
-    raw_result: AllocationResponse | RecallResponse | AssistResponse | None = Field(default=None, description="Raw result from the tool")
+    raw_result: AllocationResponse | RecallResponse | AssistResponse | ProfileResponse | None = Field(default=None, description="Raw result from the tool")

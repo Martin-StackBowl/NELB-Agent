@@ -18,6 +18,7 @@ export interface AllocationRequest {
   budget: number;
   location: JobLocation;
   radius_km?: number;
+  exclude_worker_id?: string;
 }
 
 export interface WorkerScore {
@@ -138,10 +139,33 @@ export interface RunRequest {
 export interface RunResponse {
   tool_used: string;
   response: string;
-  raw_result: AllocationResponse | RecallResponse | AssistResponse | null;
+  raw_result: AllocationResponse | RecallResponse | AssistResponse | ProfileResponse | null;
 }
 
 /** Unified agent endpoint — send natural language, agent decides which tool to call. */
 export async function runAgent(request: RunRequest): Promise<RunResponse> {
   return post<RunResponse>("/api/agent/run", request);
+}
+
+// --- Profile Lookup ---
+
+export interface ProfileResponse {
+  worker_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  skills: string[];
+  reliability_score: number;
+  latitude: number;
+  longitude: number;
+  address: string;
+  is_available: boolean;
+  total_jobs: number;
+  recent_jobs_7d: number;
+  average_rating: number | null;
+}
+
+/** Brain 4 — Look up a worker's profile from the database. */
+export async function profileLookup(worker_id: string): Promise<ProfileResponse> {
+  return post<ProfileResponse>("/api/agent/profile", { worker_id });
 }

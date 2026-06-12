@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useWorkerStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth";
 import { recallMemory, workAssist } from "@/lib/api";
 
 /** Renders text with [doc1], [doc2] etc replaced by styled superscript badges */
@@ -29,11 +30,12 @@ function CitedContent({ content }: { content: string }) {
 
 export default function WorkerPage() {
   const store = useWorkerStore();
+  const { currentUser, isLoggedIn } = useAuthStore();
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"memory" | "assist">("memory");
+  const [mode, setMode] = useState<"memory" | "assist">(isLoggedIn ? "memory" : "assist");
 
-  // Demo worker ID — Thabo Mabena (has tiling job history in seed data)
-  const DEMO_WORKER_ID = "e71d43bb-77ba-42cf-a914-555d0ee70753";
+  // Use authenticated worker_id if available, otherwise fallback
+  const workerId = currentUser?.worker_id || "00000000-0000-0000-0000-000000000000";
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -43,15 +45,21 @@ export default function WorkerPage() {
 
     try {
       if (mode === "memory") {
+        if (!isLoggedIn) {
+          store.addChatMessage(mode, "nelb", "Please log in to access your job history. Click the Login button in the top-right corner.");
+          store.setLoading(false);
+          setInput("");
+          return;
+        }
         const result = await recallMemory({
-          worker_id: DEMO_WORKER_ID,
+          worker_id: workerId,
           query: input,
         });
         store.setRecallResult(result);
         store.addChatMessage(mode, "nelb", result.answer);
       } else {
         const result = await workAssist({
-          worker_id: DEMO_WORKER_ID,
+          worker_id: workerId,
           question: input,
           job_context: "",
         });
@@ -77,33 +85,35 @@ export default function WorkerPage() {
           NELB Assistant
         </h1>
         <p className="text-gray-600 mt-1">
-          Ask about your job history or get help on site.
+          {isLoggedIn ? "Ask about your job history or get help on site." : "Get practical help on site."}
         </p>
       </header>
 
-      {/* Mode toggle */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setMode("memory")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === "memory"
-              ? "bg-nelb-secondary text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Memory recall
-        </button>
-        <button
-          onClick={() => setMode("assist")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === "assist"
-              ? "bg-nelb-secondary text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Work assistant
-        </button>
-      </div>
+      {/* Mode toggle — only show when logged in */}
+      {isLoggedIn && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setMode("memory")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              mode === "memory"
+                ? "bg-nelb-secondary text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Memory recall
+          </button>
+          <button
+            onClick={() => setMode("assist")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              mode === "assist"
+                ? "bg-nelb-secondary text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Work assistant
+          </button>
+        </div>
+      )}
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto border rounded-lg p-4 bg-white space-y-3 mb-4">

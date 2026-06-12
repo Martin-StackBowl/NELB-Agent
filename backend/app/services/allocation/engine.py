@@ -53,6 +53,28 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
     all_workers = list(result.scalars().all())
     total_evaluated = len(all_workers)
 
+    # --- Step 0: Self-exclusion (if applicable) ---
+    if request.exclude_worker_id:
+        original_count = len(all_workers)
+        excluded_name = None
+        filtered_workers = []
+        for w in all_workers:
+            if w.id == request.exclude_worker_id:
+                excluded_name = w.name
+            else:
+                filtered_workers.append(w)
+        all_workers = filtered_workers
+        if excluded_name:
+            reasoning_steps.append(ReasoningStep(
+                step=0,
+                name="Self-exclusion",
+                description="Removed posting user from candidate pool (workers cannot hire themselves).",
+                candidates_before=original_count,
+                candidates_after=len(all_workers),
+                eliminated=[excluded_name],
+            ))
+            total_evaluated = len(all_workers)
+
     # --- Step 1: Skills filter ---
     job_category = request.job_category.lower().strip()
     skilled_workers = []

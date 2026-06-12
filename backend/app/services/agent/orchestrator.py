@@ -1,9 +1,9 @@
 """NELB Unified Agent — Natural language orchestrator using o4-mini.
 
-This endpoint provides a single natural language interface to all three brains.
+This endpoint provides a single natural language interface to all four brains.
 The o4-mini reasoning model:
 1. Understands user intent
-2. Decides which brain to call (allocate, recall, or assist)
+2. Decides which brain to call (allocate, recall, assist, or profile)
 3. Extracts parameters from natural language
 4. Routes to the appropriate tool
 5. Formats the response
@@ -12,6 +12,7 @@ Example queries:
 - "Find me a cleaner near Hatfield with budget R500"
 - "Who did I tile a kitchen for last year?"
 - "Which drill bit for a 6mm wall plug?"
+- "What's my reliability score?"
 """
 
 from openai import AsyncAzureOpenAI
@@ -22,26 +23,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 ORCHESTRATOR_SYSTEM_PROMPT = """You are NELB, an intelligent job allocation assistant for community-level gig economies.
 
-You have access to three tools:
+You have access to four tools:
 
 1. **allocate_job** - Find and rank workers for a job
    Use when: User wants to find workers, post a job, or hire someone
    Required: job_category, description, budget, location (latitude/longitude), radius_km
    
 2. **recall_memory** - Query a worker's job history
-   Use when: Worker asks about their past jobs, clients, or work history
+   Use when: Worker asks about their past jobs, clients, or work history (e.g. "who did I work for", "how many jobs did I do")
    Required: worker_id, query (natural language question)
    
 3. **work_assist** - Answer practical work-related questions
-   Use when: User asks how to do something, needs advice about tools/techniques
+   Use when: User asks how to do something, needs advice about tools/materials/techniques/safety
    Required: question
+
+4. **profile_lookup** - Look up the current worker's profile information
+   Use when: User asks about their OWN profile data: skills, reliability score, availability, location, stats, rating
+   Examples: "what are my skills?", "what's my reliability score?", "am I available?", "what's my average rating?"
+   Required: worker_id
 
 **CRITICAL INSTRUCTIONS:**
 - Always call ONE tool based on the user's intent
+- For profile questions (skills, reliability, availability, stats) → use profile_lookup
+- For job history questions (past jobs, clients, dates) → use recall_memory
+- For practical work questions (tools, materials, safety) → use work_assist
+- For finding workers / posting jobs → use allocate_job
 - Extract ALL required parameters from the message
 - For locations: If user mentions a place name, use approximate coordinates for Pretoria areas
 - Default radius_km to 5.0 if not specified
-- If you cannot extract required parameters, ask the user for clarification
 - DO NOT answer questions directly - ALWAYS use the appropriate tool
 
 **Location coordinates for common Pretoria areas:**
@@ -166,6 +175,23 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
                     },
                 },
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "profile_lookup",
+                    "description": "Look up the current worker's profile information including skills, reliability score, availability status, location, job statistics, and average rating. Use when the user asks about their own profile data.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "worker_id": {
+                                "type": "string",
+                                "description": "Worker's UUID",
+                            },
+                        },
+                        "required": ["worker_id"],
+                    },
+                },
+            },
         ]
         
         # Call o4-mini with tool calling
@@ -273,6 +299,40 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             return RunResponse(
                 tool_used="work_assist",
                 response=result.answer,
+                raw_result=result,
+            )
+        
+        elif tool_name == "profile_lookup":
+            from app.services.profile.lookup import profile_lookup
+            from app.schemas.agent import ProfileRequest
+            from uuid import UUID
+            
+            profile_request = ProfileRequest(
+                worker_id=UUID(tool_args["worker_id"]),
+            )
+            
+            result = await profile_lookup(profile_request, db)
+            
+            # Format a natural language response from profile data
+            skills_str = ", ".join(result.skills) if result.skills else "none listed"
+            availability = "available for work" if result.is_available else "currently unavailable"
+            rating_str = f"{result.average_rating}/5" if result.average_rating else "no ratings yet"
+            
+            response_text = (
+                f"Here's your profile information:\n\n"
+                f"**{result.name}**\n"
+                f"- Skills: {skills_str}\n"
+                f"- Reliability score: {result.reliability_score}%\n"
+                f"- Average rating: {rating_str}\n"
+                f"- Location: {result.address}\n"
+                f"- Status: {availability}\n"
+                f"- Total jobs completed: {result.total_jobs}\n"
+                f"- Jobs in last 7 days: {result.recent_jobs_7d}"
+            )
+            
+            return RunResponse(
+                tool_used="profile_lookup",
+                response=response_text,
                 raw_result=result,
             )
         

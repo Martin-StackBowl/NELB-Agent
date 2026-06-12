@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useJobStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth";
 import { allocateJob } from "@/lib/api";
 
 // Lazy load the map to avoid SSR issues with Leaflet
@@ -45,6 +46,7 @@ const JOB_CATEGORIES = [
 
 export default function EmployerPage() {
   const store = useJobStore();
+  const { currentUser } = useAuthStore();
   const [submitted, setSubmitted] = useState(false);
 
   const handleLocationSelect = (lat: number, lng: number) => {
@@ -66,6 +68,7 @@ export default function EmployerPage() {
           address: store.address,
         },
         radius_km: store.radiusKm,
+        exclude_worker_id: currentUser?.worker_id,
       });
       store.setAllocation(result);
       setSubmitted(true);

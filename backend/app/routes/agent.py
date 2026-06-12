@@ -1,4 +1,4 @@
-"""NELB Agent API routes — allocation, recall, and assist endpoints."""
+"""NELB Agent API routes — allocation, recall, assist, and profile endpoints."""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +11,15 @@ from app.schemas.agent import (
     RecallResponse,
     AssistRequest,
     AssistResponse,
+    ProfileRequest,
+    ProfileResponse,
     RunRequest,
     RunResponse,
 )
 from app.services.allocation.engine import allocate_job
 from app.services.memory.recall import recall_memory
 from app.services.assistant.assist import work_assist
+from app.services.profile.lookup import profile_lookup
 
 router = APIRouter()
 
@@ -42,9 +45,16 @@ async def assist(request: AssistRequest):
     return result
 
 
+@router.post("/profile", response_model=ProfileResponse)
+async def profile(request: ProfileRequest, db: AsyncSession = Depends(get_db)):
+    """Brain 4 — Look up a worker's profile information from the database."""
+    result = await profile_lookup(request, db)
+    return result
+
+
 @router.post("/run", response_model=RunResponse)
 async def run(request: RunRequest, db: AsyncSession = Depends(get_db)):
-    """Unified Agent — Natural language interface to all three brains using o4-mini orchestrator."""
+    """Unified Agent — Natural language interface to all four brains using o4-mini orchestrator."""
     from app.services.agent.orchestrator import run_agent
     result = await run_agent(request, db)
     return result

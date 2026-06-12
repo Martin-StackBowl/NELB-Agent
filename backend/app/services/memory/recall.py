@@ -147,10 +147,10 @@ async def recall_memory(request: RecallRequest, db: AsyncSession) -> RecallRespo
             answer += f" Notes: {r.worker_notes}"
     else:
         answer = f"Found {len(records)} matching jobs:\n"
-        for r in records[:5]:  # Show max 5 in summary
+        for r in records[:10]:  # Show up to 10 in summary
             answer += f"• {r.client_name} — {r.category} at {r.location} ({r.completed_at.strftime('%b %Y') if r.completed_at else ''})\n"
-        if len(records) > 5:
-            answer += f"...and {len(records) - 5} more."
+        if len(records) > 10:
+            answer += f"...and {len(records) - 10} more."
 
     return RecallResponse(
         answer=answer,
