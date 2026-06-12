@@ -32,34 +32,36 @@ export default function WorkerPage() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<"memory" | "assist">("memory");
 
+  // Demo worker ID — Thabo Mabena (has tiling job history in seed data)
+  const DEMO_WORKER_ID = "e71d43bb-77ba-42cf-a914-555d0ee70753";
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    store.addChatMessage("user", input);
+    store.addChatMessage(mode, "user", input);
     store.setLoading(true);
 
     try {
       if (mode === "memory") {
         const result = await recallMemory({
-          worker_id: store.workerId || "00000000-0000-0000-0000-000000000000",
+          worker_id: DEMO_WORKER_ID,
           query: input,
         });
         store.setRecallResult(result);
-        store.addChatMessage("nelb", result.answer);
+        store.addChatMessage(mode, "nelb", result.answer);
       } else {
         const result = await workAssist({
-          worker_id: store.workerId || "00000000-0000-0000-0000-000000000000",
+          worker_id: DEMO_WORKER_ID,
           question: input,
           job_context: "",
         });
         store.setAssistResult(result);
-        // Add answer with citation data attached
-        store.addChatMessage("nelb", result.answer, result.citations);
+        store.addChatMessage(mode, "nelb", result.answer, result.citations);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       store.setError(msg);
-      store.addChatMessage("nelb", `Error: ${msg}`);
+      store.addChatMessage(mode, "nelb", `Error: ${msg}`);
     }
 
     setInput("");
@@ -105,29 +107,32 @@ export default function WorkerPage() {
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto border rounded-lg p-4 bg-white space-y-3 mb-4">
-        {store.chatHistory.length === 0 && (
+        {(mode === "memory" ? store.memoryChatHistory : store.assistChatHistory).length === 0 && (
           <div className="text-center text-gray-400 py-12">
             {mode === "memory" ? (
-              <p>
-                Ask about your job history.
-                <br />
-                <span className="text-sm">
-                  e.g. &ldquo;Who did I tile a kitchen for last year?&rdquo;
-                </span>
-              </p>
+              <div className="space-y-3">
+                <p>Ask about your job history.</p>
+                <div className="flex flex-wrap gap-2 justify-center text-xs">
+                  <button onClick={() => setInput("Who did I paint for?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">Who did I paint for?</button>
+                  <button onClick={() => setInput("How many jobs did I do in the last 3 months?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">How many jobs in last 3 months?</button>
+                  <button onClick={() => setInput("What was my rating on my last tiling job?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">My rating on last tiling job?</button>
+                  <button onClick={() => setInput("What did I do for Mrs. Van Wyk?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">What did I do for Mrs. Van Wyk?</button>
+                </div>
+              </div>
             ) : (
-              <p>
-                Ask a work-related question.
-                <br />
-                <span className="text-sm">
-                  e.g. &ldquo;Which drill bit for a 6mm wall plug in
-                  brick?&rdquo;
-                </span>
-              </p>
+              <div className="space-y-3">
+                <p>Ask a work-related question.</p>
+                <div className="flex flex-wrap gap-2 justify-center text-xs">
+                  <button onClick={() => setInput("Which drill bit for a 6mm wall plug in brick?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">Drill bit for 6mm wall plug?</button>
+                  <button onClick={() => setInput("How many bags of cement for a 3m x 4m slab at 100mm depth?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">Cement for a 3x4m slab?</button>
+                  <button onClick={() => setInput("What safety precautions when using bleach indoors?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">Safety with bleach indoors?</button>
+                  <button onClick={() => setInput("What is the correct angle for a ladder against a wall?")} className="px-3 py-1.5 bg-gray-50 border rounded-full hover:bg-gray-100 text-gray-600">Correct ladder angle?</button>
+                </div>
+              </div>
             )}
           </div>
         )}
-        {store.chatHistory.map((msg, idx) => (
+        {(mode === "memory" ? store.memoryChatHistory : store.assistChatHistory).map((msg, idx) => (
           <div
             key={idx}
             className={`flex ${

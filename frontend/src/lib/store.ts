@@ -80,8 +80,9 @@ interface WorkerState {
   // Assistant (Brain 3)
   assistResult: AssistResponse | null;
 
-  // Chat history
-  chatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
+  // Chat history — separate per mode
+  memoryChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
+  assistChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
 
   isLoading: boolean;
   error: string | null;
@@ -90,7 +91,7 @@ interface WorkerState {
   setWorker: (id: string, name: string) => void;
   setRecallResult: (result: RecallResponse) => void;
   setAssistResult: (result: AssistResponse) => void;
-  addChatMessage: (role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
+  addChatMessage: (mode: "memory" | "assist", role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }
@@ -100,17 +101,18 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   workerName: "",
   recallResult: null,
   assistResult: null,
-  chatHistory: [],
+  memoryChatHistory: [],
+  assistChatHistory: [],
   isLoading: false,
   error: null,
 
   setWorker: (id, name) => set({ workerId: id, workerName: name }),
   setRecallResult: (result) => set({ recallResult: result, isLoading: false }),
   setAssistResult: (result) => set({ assistResult: result, isLoading: false }),
-  addChatMessage: (role, content, citations) =>
+  addChatMessage: (mode, role, content, citations) =>
     set((state) => ({
-      chatHistory: [
-        ...state.chatHistory,
+      [mode === "memory" ? "memoryChatHistory" : "assistChatHistory"]: [
+        ...(mode === "memory" ? state.memoryChatHistory : state.assistChatHistory),
         { role, content, timestamp: Date.now(), citations },
       ],
     })),
