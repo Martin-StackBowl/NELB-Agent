@@ -13,9 +13,16 @@ from app.database import async_session, engine
 from app.models import Base, Worker, Client, JobHistory
 
 
+# Fixed UUIDs for demo login accounts (must match frontend/src/lib/auth.ts)
+THABO_UUID = uuid.UUID("e71d43bb-77ba-42cf-a914-555d0ee70753")
+SARAH_UUID = uuid.UUID("c4e89f23-9b1a-4d5e-8f6c-3a7b9d2e1f4a")
+JAMES_UUID = uuid.UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+
+
 # Demo workers around Pretoria, South Africa
 DEMO_WORKERS = [
     {
+        "id": SARAH_UUID,
         "name": "Sarah Mokoena",
         "email": "sarah@demo.nelb",
         "phone": "+27 71 000 0001",
@@ -27,6 +34,7 @@ DEMO_WORKERS = [
         "is_available": True,
     },
     {
+        "id": THABO_UUID,
         "name": "Thabo Mabena",
         "email": "thabo@demo.nelb",
         "phone": "+27 71 000 0002",
@@ -93,6 +101,7 @@ DEMO_WORKERS = [
         "is_available": True,
     },
     {
+        "id": JAMES_UUID,
         "name": "James Moyo",
         "email": "james@demo.nelb",
         "phone": "+27 71 000 0008",
@@ -188,7 +197,8 @@ async def seed():
         # Create workers
         workers = []
         for w_data in DEMO_WORKERS:
-            worker = Worker(id=uuid.uuid4(), **w_data)
+            worker_id = w_data.pop("id", None) or uuid.uuid4()
+            worker = Worker(id=worker_id, **w_data)
             session.add(worker)
             workers.append(worker)
 

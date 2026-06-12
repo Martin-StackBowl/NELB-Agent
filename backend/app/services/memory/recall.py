@@ -75,8 +75,8 @@ def parse_recall_intent(query: str) -> dict:
     if "last job" in query_lower or "most recent" in query_lower or "latest" in query_lower:
         intent["limit"] = 1
 
-    # "How many" detection
-    if "how many" in query_lower or "count" in query_lower:
+    # "How many" / count detection
+    if "how many" in query_lower or "count" in query_lower or "total" in query_lower or "number of" in query_lower or "how much" in query_lower:
         intent["wants_count"] = True
 
     return intent
@@ -86,6 +86,49 @@ async def recall_memory(request: RecallRequest, db: AsyncSession) -> RecallRespo
     """Parse query, search job history, return structured answer."""
 
     intent = parse_recall_intent(request.query)
+
+    # Detect if the query seems to be asking about a specific kind of work
+    # but we couldn't match it to a known category
+    query_lower = request.query.lower()
+    work_question_signals = ["who did i", "did i do", "have i done", "my last", "jobs", "work"]
+    seems_like_category_query = any(signal in query_lower for signal in work_question_signals)
+
+    # If it looks like they're asking about a type of work but no category matched,
+    # and there's no other filter (time, count, limit), treat it as an unrecognized category query
+    if seems_like_category_query and "category" not in intent and "months_back" not in intent and "wants_count" not in intent and "limit" not in intent:
+        # Try to extract the unknown word they might mean as a category
+        # Look for words that aren't common question words
+        stop_words = {
+            "who", "did", "i", "do", "for", "have", "done", "what", "when", "where", "how", "many", "my", "the",
+            "a", "an", "in", "at", "to", "is", "was", "were", "last", "first", "any", "all",
+            "ive", "i've", "total", "number", "jobs", "job", "much", "work", "about", "tell", "me",
+            "show", "please", "whats", "what's", "its", "it's", "them", "that", "this", "some", "been", "has", "had",
+        }
+        words = [w.strip("?.,!") for w in query_lower.split() if w.strip("?.,!") not in stop_words and len(w.strip("?.,!")) > 2]
+        unknown_term = words[-1] if words else None
+
+        if unknown_term:
+            # Check if they have ANY jobs — to give helpful context
+            all_jobs_result = await db.execute(
+                select(JobHistory.category)
+                .where(JobHistory.worker_id == request.worker_id)
+                .distinct()
+            )
+            worker_categories = [row[0] for row in all_jobs_result.fetchall()]
+
+            if worker_categories:
+                cats_str = ", ".join(sorted(set(worker_categories)))
+                return RecallResponse(
+                    answer=f"No '{unknown_term}' jobs found in your history. Your recorded job categories are: {cats_str}.",
+                    records=[],
+                    query_interpreted=f"Searched for category '{unknown_term}' — not found",
+                )
+            else:
+                return RecallResponse(
+                    answer="No jobs found in your history yet.",
+                    records=[],
+                    query_interpreted="No job history available",
+                )
 
     # Build query
     conditions = [JobHistory.worker_id == request.worker_id]

@@ -38,9 +38,10 @@ You have access to four tools:
    Required: question
 
 4. **profile_lookup** - Look up the current worker's profile information
-   Use when: User asks about their OWN profile data: skills, reliability score, availability, location, stats, rating
-   Examples: "what are my skills?", "what's my reliability score?", "am I available?", "what's my average rating?"
+   Use when: User asks about ANY of their own personal/profile data: name, email, phone, skills, reliability score, availability, location, address, stats, rating, total jobs, recent jobs
+   Examples: "what's my name?", "what are my skills?", "what's my reliability score?", "am I available?", "what's my average rating?", "where am I located?", "what's my email?"
    Required: worker_id
+   NOTE: If the user asks ANY personal question about themselves, use this tool. It has all their profile data.
 
 **CRITICAL INSTRUCTIONS:**
 - Always call ONE tool based on the user's intent
@@ -51,7 +52,9 @@ You have access to four tools:
 - Extract ALL required parameters from the message
 - For locations: If user mentions a place name, use approximate coordinates for Pretoria areas
 - Default radius_km to 5.0 if not specified
-- DO NOT answer questions directly - ALWAYS use the appropriate tool
+- If the user's question is completely unrelated to work, jobs, or their profile (e.g. weather, politics, general trivia, "do I have a car?"), respond directly WITHOUT calling a tool: "I don't have that information. I can help with job allocation, your work history, your profile stats, or practical work questions."
+- When in doubt about whether something is in the profile, call profile_lookup anyway — it's better to check than to refuse.
+- When you call a tool and get results, answer ONLY the specific question asked. Do not dump the entire result — extract the relevant piece. For example, if asked "what's my rating?" just say "Your average rating is 4.8/5" — don't list all profile fields.
 
 **Location coordinates for common Pretoria areas:**
 - Hatfield: -25.7479, 28.2293
@@ -313,22 +316,72 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             
             result = await profile_lookup(profile_request, db)
             
-            # Format a natural language response from profile data
+            print(f"[Orchestrator] Profile lookup successful for {result.name}")
+            print(f"[Orchestrator] Profile data: skills={result.skills}, reliability={result.reliability_score}, total_jobs={result.total_jobs}")
+            
+            # Have o4-mini answer the specific question using the profile data
+            import json
+            profile_data = result.model_dump(mode="json")
+            
+            summary_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are NELB. The user asked a question about their profile. "
+                        "Below is their full profile data from the database. "
+                        "If the user asks for a specific field (e.g. 'what's my rating?'), answer just that field concisely. "
+                        "If the user asks for their full profile, stats, or overview, format ALL fields nicely. "
+                        "If the data doesn't contain the answer to their question, say: 'That information isn't in your profile.' "
+                        "Always respond with at least one sentence."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"User's question: {request.message}\n\nProfile data: {json.dumps(profile_data, default=str)}",
+                },
+            ]
+            
+            # Format profile data first (fallback-first approach)
             skills_str = ", ".join(result.skills) if result.skills else "none listed"
             availability = "available for work" if result.is_available else "currently unavailable"
             rating_str = f"{result.average_rating}/5" if result.average_rating else "no ratings yet"
             
-            response_text = (
-                f"Here's your profile information:\n\n"
-                f"**{result.name}**\n"
-                f"- Skills: {skills_str}\n"
-                f"- Reliability score: {result.reliability_score}%\n"
-                f"- Average rating: {rating_str}\n"
-                f"- Location: {result.address}\n"
-                f"- Status: {availability}\n"
-                f"- Total jobs completed: {result.total_jobs}\n"
-                f"- Jobs in last 7 days: {result.recent_jobs_7d}"
+            fallback_response = (
+                f"**{result.name}**\n\n"
+                f"📋 **Skills:** {skills_str}\n"
+                f"✅ **Reliability:** {result.reliability_score}%\n"
+                f"⭐ **Average Rating:** {rating_str}\n"
+                f"📊 **Status:** {availability}\n"
+                f"💼 **Total Jobs:** {result.total_jobs}\n"
+                f"🕐 **Recent Jobs (7d):** {result.recent_jobs_7d}"
             )
+            
+            # Try to get a smarter summarization, but always have fallback ready
+            try:
+                print(f"[Orchestrator] Attempting profile summarization with o4-mini...")
+                import asyncio
+                summary_response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=settings.azure_ai_foundry_deployment,
+                        messages=summary_messages,
+                        max_completion_tokens=200,
+                    ),
+                    timeout=10.0
+                )
+                response_text = summary_response.choices[0].message.content
+                print(f"[Orchestrator] Raw response from o4-mini: '{response_text}'")
+                print(f"[Orchestrator] Response length: {len(response_text) if response_text else 0}")
+                if not response_text or len(response_text.strip()) < 10:
+                    print(f"[Orchestrator] Empty or too short response from o4-mini, using fallback")
+                    response_text = fallback_response
+                else:
+                    print(f"[Orchestrator] Successfully summarized profile")
+            except asyncio.TimeoutError:
+                print(f"[Orchestrator] Profile summarization timed out after 10s, using fallback")
+                response_text = fallback_response
+            except Exception as e:
+                print(f"[Orchestrator] Profile summarization failed: {type(e).__name__}: {str(e)}")
+                response_text = fallback_response
             
             return RunResponse(
                 tool_used="profile_lookup",

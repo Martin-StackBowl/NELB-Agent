@@ -2,15 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthStore, DEMO_WORKERS } from "@/lib/auth";
+import { useWorkerStore, useJobStore } from "@/lib/store";
 
 export default function Header() {
   const { currentUser, isLoggedIn, login, logout } = useAuthStore();
   const [showDropdown, setShowDropdown] = useState(false);
+  const router = useRouter();
 
   const handleLogin = (worker: typeof DEMO_WORKERS[0]) => {
     login(worker);
     setShowDropdown(false);
+  };
+
+  const handleLogout = () => {
+    // Clear all application state
+    logout();
+    useWorkerStore.getState().reset();
+    useJobStore.getState().reset();
+    // Redirect to home
+    router.push("/");
   };
 
   return (
@@ -86,7 +98,7 @@ export default function Header() {
                 Profile
               </Link>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
               >
                 Logout

@@ -94,6 +94,7 @@ interface WorkerState {
   addChatMessage: (mode: "memory" | "assist", role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  reset: () => void;
 }
 
 export const useWorkerStore = create<WorkerState>((set) => ({
@@ -118,4 +119,15 @@ export const useWorkerStore = create<WorkerState>((set) => ({
     })),
   setLoading: (loading) => set({ isLoading: loading, error: null }),
   setError: (error) => set({ error, isLoading: false }),
+  reset: () =>
+    set({
+      workerId: "",
+      workerName: "",
+      recallResult: null,
+      assistResult: null,
+      memoryChatHistory: [],
+      assistChatHistory: [],
+      isLoading: false,
+      error: null,
+    }),
 }));

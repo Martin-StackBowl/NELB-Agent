@@ -27,40 +27,40 @@ interface AuthState {
   logout: () => void;
 }
 
-// Demo workers matching seed data
+// Demo workers matching seed data (UUIDs and fields must match seed.py exactly)
 export const DEMO_WORKERS: Worker[] = [
   {
     worker_id: "e71d43bb-77ba-42cf-a914-555d0ee70753",
     name: "Thabo Mabena",
-    email: "thabo@nelb.demo",
-    skills: ["tiling", "painting", "general repair"],
-    latitude: -25.7545,
-    longitude: 28.1878,
-    address: "Centurion, Pretoria",
-    reliability_score: 85,
+    email: "thabo@demo.nelb",
+    skills: ["painting", "tiling", "general repair"],
+    latitude: -25.7625,
+    longitude: 28.2120,
+    address: "Sunnyside, Pretoria",
+    reliability_score: 88,
     is_available: true,
   },
   {
     worker_id: "c4e89f23-9b1a-4d5e-8f6c-3a7b9d2e1f4a",
-    name: "Sarah Nkosi",
-    email: "sarah@nelb.demo",
+    name: "Sarah Mokoena",
+    email: "sarah@demo.nelb",
     skills: ["cleaning", "gardening"],
-    latitude: -25.7461,
-    longitude: 28.1881,
+    latitude: -25.7479,
+    longitude: 28.2293,
     address: "Hatfield, Pretoria",
-    reliability_score: 92,
+    reliability_score: 95,
     is_available: true,
   },
   {
     worker_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    name: "James Molefe",
-    email: "james@nelb.demo",
-    skills: ["painting", "carpentry"],
-    latitude: -25.7709,
-    longitude: 28.2293,
-    address: "Brooklyn, Pretoria",
-    reliability_score: 78,
-    is_available: true,
+    name: "James Moyo",
+    email: "james@demo.nelb",
+    skills: ["carpentry", "tiling", "painting"],
+    latitude: -25.7200,
+    longitude: 28.2300,
+    address: "Riviera, Pretoria",
+    reliability_score: 82,
+    is_available: false,
   },
 ];
 
