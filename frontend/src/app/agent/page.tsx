@@ -195,7 +195,7 @@ export default function AgentPage() {
 
                 {/* Top workers */}
                 <div className="space-y-2">
-                  {(msg.rawResult as AllocationResponse).recommendations.slice(0, 3).map((worker, i) => (
+                  {(msg.rawResult as AllocationResponse).recommendations.map((worker, i) => (
                     <div key={worker.worker_id} className="flex items-center gap-3 p-3 border rounded-lg text-sm">
                       <span className="text-xs text-gray-400">#{i + 1}</span>
                       <div className="flex-1">
