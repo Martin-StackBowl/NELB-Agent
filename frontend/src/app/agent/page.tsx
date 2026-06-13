@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import { runAgent, type RunResponse, type AllocationResponse } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
-import PageTransition from "@/components/PageTransition";
-
-const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
+import FloatingChatInput from "@/components/FloatingChatInput";
 
 interface ChatMessage {
   role: "user" | "agent";
@@ -26,7 +22,6 @@ export default function AgentPage() {
   const [latitude, setLatitude] = useState(-25.7479);
   const [longitude, setLongitude] = useState(28.2293);
   const [radiusKm, setRadiusKm] = useState(5);
-  const [showMap, setShowMap] = useState(false);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -72,217 +67,230 @@ export default function AgentPage() {
     setIsLoading(false);
   };
 
+  const isEmpty = messages.length === 0;
+
   return (
-    <PageTransition>
-      <main className="max-w-4xl mx-auto p-6 flex flex-col h-screen">
-        <header className="mb-4">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to home
-          </Link>
-          <h1 className="text-3xl font-bold text-nelb-primary mt-2">
-            NELB Agent
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Talk to NELB in natural language. It decides which brain to use.
-          </p>
-        </header>
+    <div className="flex flex-col h-screen">
+      {/* Chat area */}
+      <div className="flex-1 overflow-y-auto">
+        {isEmpty ? (
+          /* Empty state - centered */
+          <div className="flex flex-col items-center justify-center h-full px-6">
+            <div className="text-center space-y-6 mb-8">
+              <h1 className="text-5xl font-bold text-nelb-primary">
+                Talk to NELB
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl">
+                Natural language interface to all four brains. NELB decides which tool to use.
+              </p>
 
-        {/* Location toggle */}
-        <div className="mb-4">
-          <button
-            onClick={() => setShowMap(!showMap)}
-            className="text-sm px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            {showMap ? "Hide map" : "Set location on map"} — {latitude.toFixed(4)}, {longitude.toFixed(4)} ({radiusKm}km)
-          </button>
-          {showMap && (
-            <div className="mt-3 space-y-2">
-              <MapPicker
-                latitude={latitude}
-                longitude={longitude}
-                radiusKm={radiusKm}
-                onLocationSelect={(lat, lng) => {
-                  setLatitude(lat);
-                  setLongitude(lng);
-                }}
-              />
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500">Radius:</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={20}
-                  value={radiusKm}
-                  onChange={(e) => setRadiusKm(Number(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="text-xs text-gray-500 w-8">{radiusKm}km</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Chat area */}
-        <div className="flex-1 overflow-y-auto border rounded-lg p-4 bg-white space-y-4 mb-4">
-          {messages.length === 0 && (
-            <div className="text-center text-gray-400 py-16 space-y-3">
-              <p className="text-lg">Talk to NELB</p>
-              <p className="text-sm">Try:</p>
-              <div className="space-y-1 text-sm">
-                <p className="text-nelb-primary">&ldquo;I need a cleaner for my yard, budget R500&rdquo;</p>
+              {/* Suggestion chips */}
+              <div className="flex flex-wrap gap-3 justify-center max-w-3xl pt-4">
+                <button
+                  onClick={() => setInput("I need a cleaner for my yard, budget R500")}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-nelb-primary hover:text-nelb-primary transition-colors"
+                >
+                  💼 Find a cleaner
+                </button>
                 {currentUser && (
                   <>
-                    <p className="text-nelb-secondary">&ldquo;Who did I tile for last year?&rdquo;</p>
-                    <p className="text-gray-500">&ldquo;What&apos;s my reliability score?&rdquo;</p>
+                    <button
+                      onClick={() => setInput("Who did I tile for last year?")}
+                      className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-nelb-secondary hover:text-nelb-secondary transition-colors"
+                    >
+                      💾 My job history
+                    </button>
+                    <button
+                      onClick={() => setInput("What's my reliability score?")}
+                      className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-nelb-accent hover:text-nelb-accent transition-colors"
+                    >
+                      📊 My profile stats
+                    </button>
                   </>
                 )}
-                <p className="text-nelb-accent">&ldquo;Which drill bit for a 6mm wall plug in brick?&rdquo;</p>
+                <button
+                  onClick={() => setInput("Which drill bit for a 6mm wall plug in brick?")}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-amber-500 hover:text-amber-600 transition-colors"
+                >
+                  🔧 Work assistant
+                </button>
               </div>
             </div>
-          )}
 
-          {messages.map((msg, idx) => (
-            <div key={idx}>
-              {/* Message bubble with animation */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] px-4 py-3 rounded-lg text-sm whitespace-pre-wrap ${
-                    msg.role === "user"
-                      ? "bg-nelb-primary text-white"
-                      : "bg-gray-50 border text-gray-800"
-                  }`}
+            {/* Centered input */}
+            <FloatingChatInput
+              value={input}
+              onChange={setInput}
+              onSend={handleSend}
+              isLoading={isLoading}
+              placeholder="Ask NELB anything..."
+              showLocationToggle
+              latitude={latitude}
+              longitude={longitude}
+              radiusKm={radiusKm}
+              onLocationChange={(lat, lng) => {
+                setLatitude(lat);
+                setLongitude(lng);
+              }}
+              onRadiusChange={setRadiusKm}
+              isCentered
+            />
+          </div>
+        ) : (
+          /* Messages view */
+          <div className="max-w-4xl mx-auto p-6 pb-32 space-y-6">
+            {messages.map((msg, idx) => (
+              <div key={idx}>
+                {/* Message bubble */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {/* Tool badge */}
-                  {msg.toolUsed && msg.toolUsed !== "none" && msg.toolUsed !== "error" && (
-                    <div className="mb-2">
-                      <motion.span
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                          msg.toolUsed === "allocate_job"
-                            ? "bg-blue-100 text-blue-700"
-                            : msg.toolUsed === "recall_memory"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {msg.toolUsed === "allocate_job" && "🧠 Allocation Brain"}
-                        {msg.toolUsed === "recall_memory" && "💾 Memory Brain"}
-                        {msg.toolUsed === "work_assist" && "🔧 Assistant Brain"}
-                      </motion.span>
-                    </div>
-                  )}
-                  {msg.content}
-                </div>
-              </motion.div>
+                  <div
+                    className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                      msg.role === "user"
+                        ? "bg-nelb-primary text-white"
+                        : "bg-white border border-gray-200 text-gray-800"
+                    }`}
+                  >
+                    {/* Tool badge */}
+                    {msg.toolUsed && msg.toolUsed !== "none" && msg.toolUsed !== "error" && (
+                      <div className="mb-2">
+                        <motion.span
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium ${
+                            msg.toolUsed === "allocate_job"
+                              ? "bg-blue-100 text-blue-700"
+                              : msg.toolUsed === "recall_memory"
+                              ? "bg-green-100 text-green-700"
+                              : msg.toolUsed === "profile_lookup"
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {msg.toolUsed === "allocate_job" && "🧠 Allocation Brain"}
+                          {msg.toolUsed === "recall_memory" && "💾 Memory Brain"}
+                          {msg.toolUsed === "work_assist" && "🔧 Assistant Brain"}
+                          {msg.toolUsed === "profile_lookup" && "👤 Profile Brain"}
+                        </motion.span>
+                      </div>
+                    )}
+                    {msg.content}
+                  </div>
+                </motion.div>
 
-              {/* Allocation results inline */}
-              {msg.rawResult && msg.toolUsed === "allocate_job" && (
-                <div className="mt-3 ml-4 space-y-3">
-                  {/* Reasoning trace with stagger */}
-                  <div className="bg-white border rounded-lg p-4">
-                    <h3 className="text-sm font-semibold mb-2 text-gray-700">Reasoning trace</h3>
+                {/* Allocation results inline */}
+                {msg.rawResult && msg.toolUsed === "allocate_job" && (
+                  <div className="mt-4 ml-4 space-y-4">
+                    {/* Reasoning trace */}
+                    <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                      <h3 className="text-sm font-semibold mb-3 text-gray-700">Reasoning trace</h3>
+                      <motion.div
+                        className="space-y-3"
+                        initial="hidden"
+                        animate="visible"
+                        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+                      >
+                        {(msg.rawResult as AllocationResponse).reasoning_trace.map((step) => (
+                          <motion.div
+                            key={step.step}
+                            className="flex items-start gap-3 text-xs"
+                            variants={{
+                              hidden: { opacity: 0, x: -20 },
+                              visible: { opacity: 1, x: 0 }
+                            }}
+                          >
+                            <span className="w-6 h-6 rounded-full bg-nelb-primary text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                              {step.step}
+                            </span>
+                            <div>
+                              <span className="font-medium text-gray-900">{step.name}</span>
+                              <span className="text-gray-400 ml-2">
+                                {step.candidates_before} → {step.candidates_after}
+                              </span>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </div>
+
+                    {/* Top workers */}
                     <motion.div
                       className="space-y-2"
                       initial="hidden"
                       animate="visible"
-                      variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+                      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
                     >
-                      {(msg.rawResult as AllocationResponse).reasoning_trace.map((step) => (
+                      {(msg.rawResult as AllocationResponse).recommendations.map((worker, i) => (
                         <motion.div
-                          key={step.step}
-                          className="flex items-start gap-2 text-xs"
+                          key={worker.worker_id}
+                          className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl text-sm"
                           variants={{
-                            hidden: { opacity: 0, x: -20 },
-                            visible: { opacity: 1, x: 0 }
+                            hidden: { opacity: 0, y: 16 },
+                            visible: { opacity: 1, y: 0 }
                           }}
                         >
-                          <span className="w-5 h-5 rounded-full bg-nelb-primary text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                            {step.step}
-                          </span>
-                          <div>
-                            <span className="font-medium">{step.name}</span>
-                            <span className="text-gray-400 ml-2">
-                              {step.candidates_before} → {step.candidates_after}
-                            </span>
+                          <span className="text-xs text-gray-400 font-medium">#{i + 1}</span>
+                          <div className="flex-1">
+                            <span className="font-semibold text-gray-900">{worker.worker_name}</span>
+                            <span className="text-gray-500 ml-2">{worker.distance_km}km</span>
                           </div>
+                          <span className="font-bold text-nelb-primary text-lg">{worker.composite_score}%</span>
                         </motion.div>
                       ))}
                     </motion.div>
                   </div>
+                )}
+              </div>
+            ))}
 
-                  {/* Top workers with stagger */}
-                  <motion.div
-                    className="space-y-2"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-                  >
-                    {(msg.rawResult as AllocationResponse).recommendations.map((worker, i) => (
-                      <motion.div
-                        key={worker.worker_id}
-                        className="flex items-center gap-3 p-3 border rounded-lg text-sm"
-                        variants={{
-                          hidden: { opacity: 0, y: 16 },
-                          visible: { opacity: 1, y: 0 }
-                        }}
-                      >
-                        <span className="text-xs text-gray-400">#{i + 1}</span>
-                        <div className="flex-1">
-                          <span className="font-medium">{worker.worker_name}</span>
-                          <span className="text-gray-400 ml-2">{worker.distance_km}km</span>
-                        </div>
-                        <span className="font-bold text-nelb-primary">{worker.composite_score}%</span>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </div>
-              )}
-            </div>
-          ))}
+            {/* Typing indicator */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <motion.div className="flex gap-1.5 items-center px-5 py-3 bg-white border border-gray-200 rounded-2xl">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={i}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-          {/* Typing indicator */}
-          {isLoading && (
-            <div className="flex justify-start">
-              <motion.div className="flex gap-1 items-center px-4 py-3 bg-gray-100 rounded-lg w-fit">
-                {[0, 1, 2].map((i) => (
-                  <motion.span
-                    key={i}
-                    className="w-2 h-2 bg-gray-400 rounded-full"
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-                  />
-                ))}
-              </motion.div>
-            </div>
-          )}
+      {/* Fixed bottom input - only show when not empty */}
+      {!isEmpty && (
+        <div className="fixed bottom-0 right-0 left-64 bg-gradient-to-t from-nelb-light via-nelb-light to-transparent pt-8 pb-6 px-6">
+          <div className="max-w-4xl mx-auto">
+            <FloatingChatInput
+              value={input}
+              onChange={setInput}
+              onSend={handleSend}
+              isLoading={isLoading}
+              placeholder="Ask NELB anything..."
+              showLocationToggle
+              latitude={latitude}
+              longitude={longitude}
+              radiusKm={radiusKm}
+              onLocationChange={(lat, lng) => {
+                setLatitude(lat);
+                setLongitude(lng);
+              }}
+              onRadiusChange={setRadiusKm}
+              isCentered={false}
+            />
+          </div>
         </div>
-
-        {/* Input */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Talk to NELB..."
-            className="flex-1 border rounded-lg px-4 py-3"
-          />
-          <button
-            onClick={handleSend}
-            disabled={isLoading || !input.trim()}
-            className="px-6 py-3 bg-nelb-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            Send
-          </button>
-        </div>
-      </main>
-    </PageTransition>
+      )}
+    </div>
   );
 }

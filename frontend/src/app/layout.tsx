@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 
 const workSans = Work_Sans({
@@ -22,9 +23,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${workSans.className} bg-nelb-light text-nelb-dark min-h-screen`}>
-        <Header />
-        {children}
+      <body className={`${workSans.className} bg-nelb-light text-nelb-dark min-h-screen flex`}>
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

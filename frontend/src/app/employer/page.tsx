@@ -86,9 +86,6 @@ export default function EmployerPage() {
     <PageTransition>
       <main className="max-w-6xl mx-auto p-6">
         <header className="mb-8">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to home
-          </Link>
           <h1 className="text-3xl font-bold text-nelb-primary mt-2">
             Post a Job
           </h1>

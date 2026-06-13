@@ -77,9 +77,6 @@ export default function WorkerPage() {
     <PageTransition>
       <main className="max-w-3xl mx-auto p-6 flex flex-col h-screen">
         <header className="mb-4">
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to home
-          </Link>
           <h1 className="text-3xl font-bold text-nelb-secondary mt-2">
             NELB Assistant
           </h1>
