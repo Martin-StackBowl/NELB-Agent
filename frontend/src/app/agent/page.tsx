@@ -70,7 +70,7 @@ export default function AgentPage() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto">
         {isEmpty ? (
@@ -267,9 +267,9 @@ export default function AgentPage() {
         )}
       </div>
 
-      {/* Fixed bottom input - only show when not empty */}
+      {/* Sticky bottom input - only show when messages exist */}
       {!isEmpty && (
-        <div className="fixed bottom-0 right-0 left-64 bg-gradient-to-t from-nelb-light via-nelb-light to-transparent pt-8 pb-6 px-6">
+        <div className="sticky bottom-0 bg-gradient-to-t from-nelb-light via-nelb-light to-transparent pt-8 pb-6 px-6">
           <div className="max-w-4xl mx-auto">
             <FloatingChatInput
               value={input}

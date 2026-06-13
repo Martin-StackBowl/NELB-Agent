@@ -8,3 +8,13 @@
   --color-nelb-dark: #111827;
   --color-nelb-light: #F9FAFB;
 }
+
+/* Ensure native form elements inherit the app font */
+select, input, textarea, button {
+  font-family: inherit;
+}
+
+/* Remove Leaflet's default dark border */
+.leaflet-container {
+  border: none !important;
+}

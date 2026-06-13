@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore, DEMO_WORKERS } from "@/lib/auth";
 import { useWorkerStore, useJobStore } from "@/lib/store";
-import { LogIn, LogOut, User, ChevronDown } from "lucide-react";
+import { LogIn, LogOut, User } from "lucide-react";
 
 export default function Header() {
   const { currentUser, isLoggedIn, login, logout } = useAuthStore();
@@ -69,6 +69,7 @@ export default function Header() {
             </>
           ) : (
             <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">Welcome back</span>
               <Link
                 href="/profile"
                 className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-full transition-colors"

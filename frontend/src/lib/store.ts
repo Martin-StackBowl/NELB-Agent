@@ -84,6 +84,9 @@ interface WorkerState {
   memoryChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
   assistChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
 
+  // Active mode
+  activeMode: "memory" | "assist";
+
   isLoading: boolean;
   error: string | null;
 
@@ -94,6 +97,7 @@ interface WorkerState {
   addChatMessage: (mode: "memory" | "assist", role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setMode: (mode: "memory" | "assist") => void;
   reset: () => void;
 }
 
@@ -104,6 +108,7 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   assistResult: null,
   memoryChatHistory: [],
   assistChatHistory: [],
+  activeMode: "memory",
   isLoading: false,
   error: null,
 
@@ -119,6 +124,7 @@ export const useWorkerStore = create<WorkerState>((set) => ({
     })),
   setLoading: (loading) => set({ isLoading: loading, error: null }),
   setError: (error) => set({ error, isLoading: false }),
+  setMode: (mode) => set({ activeMode: mode }),
   reset: () =>
     set({
       workerId: "",
@@ -127,6 +133,7 @@ export const useWorkerStore = create<WorkerState>((set) => ({
       assistResult: null,
       memoryChatHistory: [],
       assistChatHistory: [],
+      activeMode: "memory",
       isLoading: false,
       error: null,
     }),

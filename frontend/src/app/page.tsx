@@ -74,9 +74,6 @@ export default function Home() {
           >
             {isLoggedIn ? (
               <>
-                <p className="w-full text-sm text-gray-500 mb-2">
-                  Welcome back, <span className="font-medium text-gray-700">{currentUser?.name}</span>
-                </p>
                 <Link
                   href="/agent"
                   className="group inline-flex items-center gap-2 px-6 py-3 bg-nelb-dark text-white rounded-full font-medium hover:bg-gray-800 transition-all hover:scale-[1.02]"
