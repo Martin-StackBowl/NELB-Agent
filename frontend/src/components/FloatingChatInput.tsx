@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowUp, History, Wrench, MapPin } from "lucide-react";
+import { ArrowUp, History, Wrench, MapPin, Lock } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
@@ -23,6 +23,7 @@ interface FloatingChatInputProps {
   showModeToggle?: boolean;
   activeMode?: "memory" | "assist";
   onModeChange?: (mode: "memory" | "assist") => void;
+  memoryRequiresLogin?: boolean;
 }
 
 export default function FloatingChatInput({
@@ -38,8 +39,9 @@ export default function FloatingChatInput({
   onLocationChange,
   onRadiusChange,
   showModeToggle = false,
-  activeMode = "memory",
+  activeMode = "assist",
   onModeChange,
+  memoryRequiresLogin = false,
 }: FloatingChatInputProps) {
   const [showMap, setShowMap] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -159,13 +161,18 @@ export default function FloatingChatInput({
               <div className="inline-flex items-center bg-foreground/[0.06] rounded-full p-0.5">
                 <button
                   onClick={() => onModeChange?.("memory")}
+                  title={memoryRequiresLogin ? "Log in to use Memory" : undefined}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     activeMode === "memory"
                       ? "bg-elevated text-nelb-primary shadow-sm"
+                      : memoryRequiresLogin
+                      ? "text-faint cursor-default"
                       : "text-muted hover:text-foreground"
                   }`}
                 >
-                  <History className="w-3 h-3" />
+                  {memoryRequiresLogin
+                    ? <Lock className="w-3 h-3" />
+                    : <History className="w-3 h-3" />}
                   Memory
                 </button>
                 <button

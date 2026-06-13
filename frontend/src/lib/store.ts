@@ -108,7 +108,7 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   assistResult: null,
   memoryChatHistory: [],
   assistChatHistory: [],
-  activeMode: "memory",
+  activeMode: "assist",   // default to assist — memory requires login
   isLoading: false,
   error: null,
 

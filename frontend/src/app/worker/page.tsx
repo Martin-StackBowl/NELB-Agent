@@ -78,7 +78,8 @@ export default function WorkerPage() {
     store.setLoading(false);
   };
 
-  const prompts = mode === "memory" && isLoggedIn ? MEMORY_PROMPTS : ASSIST_PROMPTS;
+  // Show memory prompts whenever mode is memory (locked or not), assist prompts otherwise.
+  const prompts = mode === "memory" ? MEMORY_PROMPTS : ASSIST_PROMPTS;
   const accent = mode === "memory" ? "from-nelb-secondary to-nelb-cyan" : "from-nelb-accent to-nelb-pink";
 
   // index of last nelb message (the one allowed to stream)
@@ -105,9 +106,11 @@ export default function WorkerPage() {
               </div>
               <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Work Assistant</h1>
               <p className="mt-4 text-muted text-lg">
-                {isLoggedIn
-                  ? "Ask about your job history, profile, or get practical help on site."
-                  : "Get practical, grounded work guidance from NELB's knowledge base."}
+                {mode === "assist"
+                  ? "Get practical, grounded work guidance from NELB's knowledge base."
+                  : isLoggedIn
+                  ? "Ask about your job history and profile."
+                  : "Memory requires a login. Switch to Assist for general questions."}
               </p>
 
               <div className="mt-8 grid sm:grid-cols-2 gap-3 text-left">
@@ -239,10 +242,11 @@ export default function WorkerPage() {
           onChange={setInput}
           onSend={handleSend}
           isLoading={store.isLoading}
-          placeholder={isLoggedIn && mode === "memory" ? "Ask about your history or profile…" : "Ask a work-related question…"}
-          showModeToggle={isLoggedIn}
+          placeholder={mode === "assist" ? "Ask a work-related question…" : isLoggedIn ? "Ask about your history or profile…" : "Log in to use memory…"}
+          showModeToggle
           activeMode={mode}
           onModeChange={(m) => store.setMode(m)}
+          memoryRequiresLogin={!isLoggedIn}
         />
       </div>
     </div>
