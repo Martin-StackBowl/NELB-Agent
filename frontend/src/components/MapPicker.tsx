@@ -3,16 +3,25 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { useTheme } from "@/lib/theme";
 
-// Fix leaflet default marker icon issue with Next.js
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// Custom gradient pin (inline SVG) — replaces leaflet's default blue marker.
+const pinIcon = L.divIcon({
+  className: "",
+  html: `
+    <div style="position:relative;transform:translate(-50%,-100%)">
+      <svg width="34" height="44" viewBox="0 0 34 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pinG" x1="0" y1="0" x2="34" y2="44" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4f6bff"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+        <path d="M17 0C7.6 0 0 7.6 0 17c0 12 17 27 17 27s17-15 17-27C34 7.6 26.4 0 17 0z" fill="url(#pinG)"/>
+        <circle cx="17" cy="16.5" r="6" fill="white"/>
+      </svg>
+    </div>`,
+  iconSize: [34, 44],
+  iconAnchor: [0, 0],
 });
 
 interface MapPickerProps {
@@ -20,19 +29,27 @@ interface MapPickerProps {
   longitude: number;
   radiusKm: number;
   onLocationSelect: (lat: number, lng: number) => void;
+  className?: string;
 }
 
-function LocationSelector({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
+function LocationSelector({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
+      onSelect(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
 }
 
-export default function MapPicker({ latitude, longitude, radiusKm, onLocationSelect }: MapPickerProps) {
+export default function MapPicker({
+  latitude,
+  longitude,
+  radiusKm,
+  onLocationSelect,
+  className = "h-full w-full",
+}: MapPickerProps) {
   const [isClient, setIsClient] = useState(false);
+  const isDark = useTheme((s) => s.isDark);
 
   useEffect(() => {
     setIsClient(true);
@@ -40,33 +57,38 @@ export default function MapPicker({ latitude, longitude, radiusKm, onLocationSel
 
   if (!isClient) {
     return (
-      <div className="w-full h-[300px] bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
-        Loading map...
+      <div className={`${className} bg-elevated grid place-items-center text-faint text-sm`}>
+        Loading map…
       </div>
     );
   }
 
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
   return (
-    <div className="w-full h-[300px] rounded-lg overflow-hidden [&_.leaflet-container]:border-0">
+    <div className={className}>
       <MapContainer
-        key={`${latitude}-${longitude}-${radiusKm}`}
+        key={`${isDark}-${latitude}-${longitude}-${radiusKm}`}
         center={[latitude, longitude]}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
+        zoomControl={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; OpenStreetMap &copy; CARTO'
+          url={tileUrl}
         />
-        <LocationSelector onLocationSelect={onLocationSelect} />
-        <Marker position={[latitude, longitude]} icon={defaultIcon} />
+        <LocationSelector onSelect={onLocationSelect} />
+        <Marker position={[latitude, longitude]} icon={pinIcon} />
         <Circle
           center={[latitude, longitude]}
           radius={radiusKm * 1000}
           pathOptions={{
-            color: "#1E40AF",
-            fillColor: "#1E40AF",
-            fillOpacity: 0.1,
+            color: "#4f6bff",
+            fillColor: "#8b5cf6",
+            fillOpacity: 0.12,
             weight: 2,
           }}
         />

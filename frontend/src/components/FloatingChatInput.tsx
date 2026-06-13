@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowUpCircle, History, Wrench, MapPin } from "lucide-react";
+import { ArrowUp, History, Wrench, MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
@@ -30,19 +30,27 @@ export default function FloatingChatInput({
   onChange,
   onSend,
   isLoading = false,
-  placeholder = "Ask NELB...",
+  placeholder = "Ask NELB…",
   showLocationToggle = false,
   latitude = -25.7479,
   longitude = 28.2293,
   radiusKm = 5,
   onLocationChange,
   onRadiusChange,
-  isCentered = true,
   showModeToggle = false,
   activeMode = "memory",
   onModeChange,
 }: FloatingChatInputProps) {
   const [showMap, setShowMap] = useState(false);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "0px";
+    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+  }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -51,20 +59,20 @@ export default function FloatingChatInput({
     }
   };
 
-  const inputComponent = (
-    <div className={`w-full ${isCentered ? "max-w-3xl" : ""}`}>
-      {/* Map panel */}
+  return (
+    <div className="w-full max-w-3xl mx-auto">
+      {/* Map panel (opens above the dock) */}
       <AnimatePresence>
         {showMap && showLocationToggle && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0, y: 8 }}
+            animate={{ height: "auto", opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: 8 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="mb-3 overflow-hidden"
           >
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-              <div className="h-[300px]">
+            <div className="glass-strong rounded-3xl overflow-hidden shadow-xl">
+              <div className="h-[280px]">
                 <MapPicker
                   latitude={latitude}
                   longitude={longitude}
@@ -72,54 +80,74 @@ export default function FloatingChatInput({
                   onLocationSelect={(lat, lng) => onLocationChange?.(lat, lng)}
                 />
               </div>
-              <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="p-4 border-t border-border">
                 <div className="flex items-center gap-3">
-                  <label className="text-xs text-gray-600 font-medium">Radius:</label>
+                  <span className="text-xs text-muted font-medium">Radius</span>
                   <input
                     type="range"
                     min={1}
                     max={20}
                     value={radiusKm}
                     onChange={(e) => onRadiusChange?.(Number(e.target.value))}
-                    className="flex-1"
+                    className="flex-1 accent-nelb-primary"
                   />
-                  <span className="text-xs text-gray-700 font-medium w-12">{radiusKm}km</span>
+                  <span className="text-xs text-foreground font-semibold w-10">{radiusKm}km</span>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Selected: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                </div>
+                <p className="mt-2 text-xs text-faint">
+                  Pin: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </p>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Input bar */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-lg">
-        {/* Text input row */}
-        <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-          <input
-            type="text"
+      {/* Input dock */}
+      <div className="glass-strong glow-ring rounded-[28px] px-2.5 py-2.5">
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={taRef}
+            rows={1}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={isLoading}
-            className="flex-1 bg-transparent border-none focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
+            className="flex-1 resize-none bg-transparent border-none focus:outline-none text-foreground placeholder-faint text-[15px] leading-6 px-3 py-2 max-h-[200px] scroll-area"
           />
+          <button
+            onClick={onSend}
+            disabled={isLoading || !value.trim()}
+            aria-label="Send"
+            className="shrink-0 w-10 h-10 grid place-items-center rounded-full bg-gradient-to-br from-nelb-primary to-nelb-violet text-white shadow-lg shadow-nelb-primary/30 transition-all hover:scale-105 disabled:opacity-40 disabled:scale-100 disabled:shadow-none"
+          >
+            {isLoading ? (
+              <span className="flex gap-1 items-center">
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 bg-white rounded-full"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                  />
+                ))}
+              </span>
+            ) : (
+              <ArrowUp className="w-5 h-5" />
+            )}
+          </button>
         </div>
 
-        {/* Bottom row: toggles on left, send on right */}
-        <div className="flex items-center justify-between px-3 pb-3">
-          <div className="flex items-center gap-2">
-            {/* Location toggle */}
+        {/* Toggles row */}
+        {(showLocationToggle || showModeToggle) && (
+          <div className="flex items-center gap-2 px-2 pt-1.5">
             {showLocationToggle && (
               <button
-                onClick={() => setShowMap(!showMap)}
+                onClick={() => setShowMap((v) => !v)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   showMap
-                    ? "bg-nelb-primary/10 text-nelb-primary border border-nelb-primary/30"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-nelb-primary/15 text-nelb-primary ring-1 ring-nelb-primary/30"
+                    : "text-muted hover:bg-foreground/5"
                 }`}
               >
                 <MapPin className="w-3.5 h-3.5" />
@@ -127,15 +155,14 @@ export default function FloatingChatInput({
               </button>
             )}
 
-            {/* Mode toggle */}
             {showModeToggle && (
-              <div className="inline-flex items-center bg-gray-100 rounded-full p-0.5">
+              <div className="inline-flex items-center bg-foreground/[0.06] rounded-full p-0.5">
                 <button
                   onClick={() => onModeChange?.("memory")}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     activeMode === "memory"
-                      ? "bg-white text-nelb-primary shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-elevated text-nelb-primary shadow-sm"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   <History className="w-3 h-3" />
@@ -143,10 +170,10 @@ export default function FloatingChatInput({
                 </button>
                 <button
                   onClick={() => onModeChange?.("assist")}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     activeMode === "assist"
-                      ? "bg-white text-nelb-secondary shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-elevated text-nelb-secondary shadow-sm"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   <Wrench className="w-3 h-3" />
@@ -155,40 +182,8 @@ export default function FloatingChatInput({
               </div>
             )}
           </div>
-
-          {/* Send button */}
-          <button
-            onClick={onSend}
-            disabled={isLoading || !value.trim()}
-            className="p-1.5 text-nelb-primary hover:text-blue-700 transition-colors disabled:text-gray-300 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <motion.div className="flex gap-1 items-center w-7 h-7 justify-center">
-                {[0, 1, 2].map((i) => (
-                  <motion.span
-                    key={i}
-                    className="w-1.5 h-1.5 bg-gray-400 rounded-full"
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-                  />
-                ))}
-              </motion.div>
-            ) : (
-              <ArrowUpCircle className="w-7 h-7" />
-            )}
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
-
-  if (isCentered) {
-    return (
-      <div className="flex items-center justify-center w-full px-6">
-        {inputComponent}
-      </div>
-    );
-  }
-
-  return inputComponent;
 }
