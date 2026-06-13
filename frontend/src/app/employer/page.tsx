@@ -60,6 +60,13 @@ export default function EmployerPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate category is selected
+    if (!store.category) {
+      store.setError("Please select a job category");
+      return;
+    }
+    
     store.setLoading(true);
 
     try {
@@ -77,6 +84,8 @@ export default function EmployerPage() {
       });
       store.setAllocation(result);
       setSubmitted(true);
+      // Scroll to top when results are displayed
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       store.setError(
         err instanceof Error ? err.message : "Something went wrong"
@@ -89,10 +98,12 @@ export default function EmployerPage() {
       <main className="max-w-3xl mx-auto px-6 py-10">
         <header className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-nelb-primary">
-            Post a Job
+            {submitted ? "Worker Allocation Results" : "Post a Job"}
           </h1>
           <p className="text-gray-600 mt-2">
-            Describe what you need done. NELB will find the best workers nearby.
+            {submitted
+              ? "NELB has analyzed and ranked the best workers for your job."
+              : "Describe what you need done. NELB will find the best workers nearby."}
           </p>
         </header>
 
@@ -102,7 +113,7 @@ export default function EmployerPage() {
             <div>
               <Listbox value={store.category} onChange={(val) => store.setJobDetails({ category: val })}>
                 <ListboxLabel className="block text-sm font-medium text-gray-700 mb-1">
-                  Job category
+                  Job category <span className="text-red-500">*</span>
                 </ListboxLabel>
                 <div className="relative">
                   <ListboxButton className="relative w-full cursor-pointer rounded-lg border border-gray-200 bg-gray-100 py-2.5 pl-3 pr-10 text-left text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-nelb-primary/30">
@@ -141,7 +152,7 @@ export default function EmployerPage() {
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Describe the job
+                Describe the job <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={store.description}
@@ -158,14 +169,24 @@ export default function EmployerPage() {
             {/* Budget */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Budget (R)
+                Budget (R) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 value={store.budget || ""}
-                onChange={(e) =>
-                  store.setJobDetails({ budget: Number(e.target.value) })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Only allow positive integers
+                  if (value === "" || /^[1-9]\d*$/.test(value)) {
+                    store.setJobDetails({ budget: Number(value) || 0 });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  // Block e, E, +, -, and decimal point
+                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 required
                 min={1}
                 placeholder="500"
@@ -214,11 +235,11 @@ export default function EmployerPage() {
 
             <button
               type="submit"
-              disabled={store.isLoading}
-              className="w-full py-3 bg-nelb-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              disabled={store.isLoading || !store.category}
+              className="w-full py-3 bg-nelb-primary text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
             >
               {store.isLoading ? (
-                <motion.span className="flex gap-1 items-center justify-center">
+                <motion.span className="flex gap-1 items-center justify-center h-6">
                   {[0, 1, 2].map((i) => (
                     <motion.span
                       key={i}
@@ -249,10 +270,10 @@ export default function EmployerPage() {
                 </div>
 
                 {/* Reasoning trace with stagger */}
-                <div className="bg-white border rounded-lg p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h2 className="font-semibold text-lg">Allocation Pipeline</h2>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h2 className="font-semibold text-lg text-gray-900">Allocation Pipeline</h2>
+                    <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
                       ⚙️ Python deterministic reasoning
                     </span>
                   </div>
@@ -275,8 +296,8 @@ export default function EmployerPage() {
                           {step.step}
                         </span>
                         <div>
-                          <p className="font-medium">{step.name}</p>
-                          <p className="text-gray-500">{step.description}</p>
+                          <p className="font-medium text-gray-900">{step.name}</p>
+                          <p className="text-gray-600">{step.description}</p>
                           <p className="text-gray-400 text-xs mt-1">
                             {step.candidates_before} → {step.candidates_after}{" "}
                             candidates
@@ -289,7 +310,7 @@ export default function EmployerPage() {
 
                 {/* Recommendations with stagger */}
                 <div>
-                  <h2 className="font-semibold text-lg mb-3">
+                  <h2 className="font-semibold text-lg mb-4 text-gray-900">
                     Top recommendations
                   </h2>
                   <motion.div
@@ -301,10 +322,10 @@ export default function EmployerPage() {
                     {store.allocation.recommendations.map((worker, idx) => (
                       <motion.div
                         key={worker.worker_id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`p-4 border rounded-2xl cursor-pointer transition-all shadow-sm ${
                           store.selectedWorker?.worker_id === worker.worker_id
-                            ? "border-nelb-primary bg-blue-50"
-                            : "hover:border-gray-300"
+                            ? "border-nelb-primary bg-blue-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
                         }`}
                         onClick={() => store.setSelectedWorker(worker)}
                         variants={{
@@ -314,10 +335,10 @@ export default function EmployerPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="text-sm text-gray-400 mr-2">
+                            <span className="text-xs text-gray-400 font-medium mr-2">
                               #{idx + 1}
                             </span>
-                            <span className="font-medium">
+                            <span className="font-semibold text-gray-900">
                               {worker.worker_name}
                             </span>
                             <span className="text-sm text-gray-500 ml-2">
@@ -328,11 +349,11 @@ export default function EmployerPage() {
                             {worker.composite_score}%
                           </span>
                         </div>
-                        <div className="flex gap-2 mt-2 flex-wrap">
+                        <div className="flex gap-2 mt-3 flex-wrap">
                           {worker.skills.map((skill) => (
                             <span
                               key={skill}
-                              className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600"
+                              className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-full text-xs text-gray-700 font-medium"
                             >
                               {skill}
                             </span>
@@ -350,32 +371,25 @@ export default function EmployerPage() {
                 </div>
 
                 {/* Explanation with Foundry IQ enrichment */}
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-sm font-semibold text-gray-700">Decision Explanation</h3>
-                    {store.allocation.citations && store.allocation.citations.length > 0 && (
-                      <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded border">
-                        📖 Grounded by Foundry IQ
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Decision Explanation</h3>
+                  <div className="text-sm text-gray-700 leading-relaxed">
                     <CitedContent content={store.allocation.explanation} />
                   </div>
                   {/* Citation cards with animation */}
                   {store.allocation.citations && store.allocation.citations.length > 0 && (
                     <motion.div
-                      className="mt-4 pt-4 border-t"
+                      className="mt-4 pt-4 border-t border-gray-200"
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.2 }}
                     >
-                      <p className="text-xs text-gray-500 mb-2">Sources:</p>
+                      <p className="text-xs text-gray-500 mb-2 font-medium">Supporting references:</p>
                       <div className="space-y-2">
                         {store.allocation.citations.map((c) => (
                           <div
                             key={c.index}
-                            className="flex items-center gap-2 px-3 py-2 bg-white border rounded text-xs text-gray-600"
+                            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-600"
                           >
                             <span className="font-medium text-nelb-primary">{c.index}</span>
                             <span className="text-gray-300">|</span>

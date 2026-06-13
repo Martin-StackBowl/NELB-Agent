@@ -49,6 +49,7 @@ export default function MapPicker({ latitude, longitude, radiusKm, onLocationSel
   return (
     <div className="w-full h-[300px] rounded-lg overflow-hidden [&_.leaflet-container]:border-0">
       <MapContainer
+        key={`${latitude}-${longitude}-${radiusKm}`}
         center={[latitude, longitude]}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
