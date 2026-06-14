@@ -63,8 +63,18 @@ You have access to four tools:
 - Centurion: -25.7700, 28.1900
 - Arcadia: -25.7550, 28.2400
 
-**Job categories:**
-cleaning, gardening, painting, plumbing, electrical, tiling, carpentry, moving, general repair
+**Job categories and keyword mapping — use the EXACT category name:**
+- `cleaning` — cleaner, clean, cleaning, house clean, office clean, domestic
+- `gardening` — gardener, gardening, garden, lawn, mow, hedge, trim, yard work, plants
+- `painting` — painter, painting, paint, repaint, walls
+- `plumbing` — plumber, plumbing, pipe, tap, leak, drain, toilet
+- `electrical` — electrician, electrical, wiring, socket, switch, lights
+- `tiling` — tiler, tiling, tiles, tile, grout, floor tiles
+- `carpentry` — carpenter, carpentry, wood, shelves, furniture, doors
+- `moving` — moving, packing, removals, transport belongings
+- `general repair` — handyman, repairs, fix, general maintenance
+
+**IMPORTANT:** "cleaner for my yard" = `cleaning` (the person is a cleaner, the location is a yard). "yard work" or "mow my lawn" = `gardening`. The noun describing the WORKER TYPE determines the category, not the location.
 """
 
 
@@ -248,16 +258,28 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             
             result = await allocate_job(allocation_request, db)
             
-            # Format response
+            # Format response: ranked worker bullets then the existing explanation
+            # (which already contains "Recommended: ... Why ... [doc1]" intact).
             if result.recommendations:
-                top = result.recommendations[0]
+                pool = len(result.recommendations)
+
+                # Build ranked worker bullets
+                worker_lines = []
+                for i, w in enumerate(result.recommendations):
+                    line = (
+                        f"#{i+1} **{w.worker_name}** — {w.composite_score}% | "
+                        f"Reliability: {w.reliability_score}% | "
+                        f"Distance: {w.distance_km}km | "
+                        f"Budget fit: {w.budget_score}% (est. R{w.estimated_price:.0f}) | "
+                        f"Fairness: {w.fairness_score}%"
+                    )
+                    worker_lines.append(line)
+
+                workers_text = "\n".join(worker_lines)
+
                 response_text = (
-                    f"Found {len(result.recommendations)} workers for your {tool_args['job_category']} job.\n\n"
-                    f"**Top recommendation:** {top.worker_name}\n"
-                    f"- Composite score: {top.composite_score}%\n"
-                    f"- Distance: {top.distance_km}km away\n"
-                    f"- Skills: {', '.join(top.skills)}\n"
-                    f"- Recent jobs: {top.recent_jobs_7d} in past 7 days\n\n"
+                    f"Found {pool} workers for your {tool_args['job_category']} job:\n\n"
+                    f"{workers_text}\n\n"
                     f"{result.explanation}"
                 )
             else:

@@ -378,9 +378,9 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
             runner_up_score = top_recommendations[1].composite_score / 100.0
             margin = (winner_score - runner_up_score) / max(winner_score, 0.001)
         else:
-            margin = 1.0  # Only candidate — full margin
+            margin = 1.0
         pool_size = len(scored_workers)
-        pool_factor = min(1.0, pool_size / 5.0)  # scales up to a pool of 5+
+        pool_factor = min(1.0, pool_size / 5.0)
         confidence = round(min(1.0, margin * pool_factor + winner_score * 0.4), 2)
 
         explanation = (
@@ -395,11 +395,37 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         )
     else:
         confidence = 0.0
-        explanation = (
-            f"No workers found within {radius}km for '{job_category}'. "
-            f"The allocation engine ran correctly — move the pin to the Pretoria, South Africa area "
-            f"to see NELB reason over a full candidate pool."
-        )
+        # Diagnose the actual eliminator from the reasoning trace
+        eliminator = None
+        for step in reasoning_steps:
+            if step.candidates_after == 0 and step.candidates_before > 0:
+                eliminator = step.name
+                break
+
+        if eliminator == "Budget fit":
+            explanation = (
+                f"No {job_category} workers matched your budget. "
+                f"You may want to adjust your budget or widen the search radius to see more options."
+            )
+        elif eliminator == "Distance analysis":
+            explanation = (
+                f"No {job_category} workers were found within {radius}km of your location. "
+                f"Try widening the search radius."
+            )
+        elif eliminator == "Skills filter":
+            explanation = (
+                f"No workers with {job_category} skills are available right now."
+            )
+        elif eliminator == "Reliability filter":
+            explanation = (
+                f"Workers with {job_category} skills are in the area, but none have a strong enough track record yet."
+            )
+        elif eliminator == "Availability filter":
+            explanation = (
+                f"Workers with {job_category} skills are nearby, but all are currently unavailable. Check back later."
+            )
+        else:
+            explanation = f"No {job_category} workers were found for your current search."
 
     # Enrich with Foundry IQ if applicable
     from app.services.allocation.enrichment import enrich_with_foundry_iq
