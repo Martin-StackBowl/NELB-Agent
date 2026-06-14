@@ -66,6 +66,18 @@ export default function EmployerPage() {
   const { currentUser } = useAuthStore();
   const [submitted, setSubmitted] = useState(false);
 
+  // Sync the results/form view with browser history so the browser back button
+  // returns to the form (not the previous page) while viewing results.
+  useEffect(() => {
+    const onPop = () => {
+      setSubmitted(false);
+      store.reset();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleLocationSelect = (lat: number, lng: number) => {
     store.setJobDetails({ latitude: lat, longitude: lng });
   };
@@ -88,6 +100,8 @@ export default function EmployerPage() {
       });
       store.setAllocation(result);
       setSubmitted(true);
+      // Push a history entry so browser-back returns to the form
+      window.history.pushState({ nelbView: "results" }, "");
     } catch (err) {
       store.setError(err instanceof Error ? err.message : "Something went wrong");
     }
@@ -264,7 +278,7 @@ export default function EmployerPage() {
             </form>
           </>
         ) : (
-          <Results onBack={() => { setSubmitted(false); store.reset(); }} />
+          <Results onBack={() => window.history.back()} />
         )}
       </div>
     </div>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "@/lib/auth";
+import { useChatReset } from "@/lib/chatReset";
 import {
   Briefcase,
   Wrench,
@@ -23,10 +25,33 @@ const NAV = [
 
 export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
+  const [confirmNewChat, setConfirmNewChat] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { isLoggedIn } = useAuthStore();
+  const { activeCount, requestReset } = useChatReset();
+
+  useEffect(() => setMounted(true), []);
+
+  const handleNewChat = () => {
+    // Only confirm if there's an active conversation to lose.
+    if (pathname === "/agent" && activeCount > 0) {
+      setConfirmNewChat(true);
+    } else {
+      requestReset();
+      router.push("/agent");
+    }
+  };
+
+  const confirmReset = () => {
+    requestReset();
+    setConfirmNewChat(false);
+    router.push("/agent");
+  };
 
   return (
+    <>
     <motion.aside
       animate={{ width: expanded ? 248 : 68 }}
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
@@ -60,16 +85,16 @@ export default function Sidebar() {
 
       {/* New chat */}
       <div className="px-3">
-        <Link
-          href="/agent"
-          className={`flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-nelb-primary to-nelb-violet text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01] ${
+        <button
+          onClick={handleNewChat}
+          className={`w-full flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-nelb-primary to-nelb-violet text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01] ${
             expanded ? "px-3.5 py-2.5 justify-start" : "p-2.5 justify-center"
           }`}
           title={!expanded ? "New chat" : undefined}
         >
           <Plus className="w-5 h-5 shrink-0" />
           {expanded && <span className="text-sm">New chat</span>}
-        </Link>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -151,5 +176,59 @@ export default function Sidebar() {
         </Link>
       </div>
     </motion.aside>
+
+      {/* New chat confirmation dialog — portaled to body so it's a true app-level
+          modal, independent of the collapsible sidebar */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {confirmNewChat && (
+              <div className="fixed inset-0 z-[100] grid place-items-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setConfirmNewChat(false)}
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                />
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                  className="relative w-full max-w-sm glass-strong rounded-2xl p-6 shadow-2xl"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-nelb-primary to-nelb-violet grid place-items-center shrink-0">
+                      <Plus className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Start a new chat?</h3>
+                  </div>
+                  <p className="text-sm text-muted mb-6">
+                    Your current chat will be cleared. This can&apos;t be undone.
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setConfirmNewChat(false)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-foreground/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmReset}
+                      className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-nelb-primary to-nelb-violet text-white shadow-lg shadow-nelb-primary/25 hover:scale-[1.02] transition-transform"
+                    >
+                      New chat
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+    </>
   );
 }

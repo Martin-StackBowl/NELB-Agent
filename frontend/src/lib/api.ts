@@ -131,6 +131,7 @@ export async function workAssist(
 
 export interface RunRequest {
   message: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
   latitude?: number;
   longitude?: number;
   radius_km?: number;

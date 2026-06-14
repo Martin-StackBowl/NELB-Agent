@@ -45,6 +45,9 @@ You have access to four tools:
 
 **CRITICAL INSTRUCTIONS:**
 - Always call ONE tool based on the user's intent
+- **Accumulate information across the conversation.** If an earlier message already gave you the job category, budget, or description, DO NOT ask for it again — combine it with the latest message. Example: user says "I need a cleaner for my house", you ask for budget, user replies "R3000" → you now have category=cleaning + budget=3000, so call allocate_job immediately.
+- For allocate_job you only NEED job_category and budget. Description is optional — infer a sensible one from the conversation if the user didn't give one (e.g. "House cleaning"). Location comes from the request context. Never block on a missing description.
+- The moment you have job_category and budget, call allocate_job. Do not ask further clarifying questions.
 - For profile questions (skills, reliability, availability, stats) → use profile_lookup
 - For job history questions (past jobs, clients, dates) → use recall_memory
 - For practical work questions (tools, materials, safety) → use work_assist
@@ -212,6 +215,11 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             model=settings.azure_ai_foundry_deployment,
             messages=[
                 {"role": "system", "content": ORCHESTRATOR_SYSTEM_PROMPT},
+                *[
+                    {"role": t.role, "content": t.content}
+                    for t in (request.history or [])
+                    if t.role in ("user", "assistant") and t.content
+                ],
                 {"role": "user", "content": user_message},
             ],
             tools=tools,

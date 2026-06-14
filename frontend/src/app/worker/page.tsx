@@ -60,6 +60,10 @@ export default function WorkerPage() {
 
       const result = await runAgent({
         message: userMessage,
+        history: currentMessages.slice(-10).map((m) => ({
+          role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+          content: m.content,
+        })),
         worker_id: currentUser?.worker_id,
       });
 

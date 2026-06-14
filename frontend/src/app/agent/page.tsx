@@ -8,6 +8,7 @@ import { useChatScroll } from "@/lib/useChatScroll";
 import FloatingChatInput from "@/components/FloatingChatInput";
 import StreamingText from "@/components/StreamingText";
 import CitedContent from "@/components/CitedContent";
+import { useChatReset } from "@/lib/chatReset";
 import {
   Brain,
   Briefcase,
@@ -51,6 +52,19 @@ export default function AgentPage() {
     messages.length + (isLoading ? 1 : 0)
   );
 
+  // Coordinate "New chat" with the sidebar
+  const { setActiveCount, nonce } = useChatReset();
+  useEffect(() => {
+    setActiveCount(messages.length);
+  }, [messages.length, setActiveCount]);
+  useEffect(() => {
+    // Cleared from the sidebar's New chat action
+    setMessages([]);
+    setInput("");
+    setStreamingIdx(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nonce]);
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     const userMessage = input.trim();
@@ -61,6 +75,10 @@ export default function AgentPage() {
     try {
       const result: RunResponse = await runAgent({
         message: userMessage,
+        history: messages.slice(-10).map((m) => ({
+          role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+          content: m.content,
+        })),
         latitude,
         longitude,
         radius_km: radiusKm,

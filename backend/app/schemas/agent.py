@@ -117,8 +117,14 @@ class ProfileResponse(BaseModel):
 
 # --- Unified Agent (Natural Language Interface) ---
 
+class ChatTurn(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'")
+    content: str = Field(..., description="The message text")
+
+
 class RunRequest(BaseModel):
     message: str = Field(..., description="Natural language message from user")
+    history: list[ChatTurn] = Field(default_factory=list, description="Prior conversation turns for context")
     latitude: float | None = None
     longitude: float | None = None
     radius_km: float | None = None
