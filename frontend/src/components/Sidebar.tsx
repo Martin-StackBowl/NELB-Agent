@@ -149,10 +149,10 @@ export default function Sidebar() {
                   : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
               }`}
             >
-              {active && (
+              {active && !expanded && (
                 <motion.span
                   layoutId="nav-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b from-nelb-primary to-nelb-violet"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b ${gradient}`}
                 />
               )}
               <Icon className="w-5 h-5 shrink-0" />
