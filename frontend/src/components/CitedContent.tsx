@@ -1,8 +1,26 @@
 "use client";
 
+import React from "react";
+
 type Citation = { index: number; filename: string; content?: string };
 
-/** Renders text with [doc1], [doc2] markers replaced by styled superscript badges.
+/** Renders inline **bold** markdown within a plain text fragment. */
+function renderBold(text: string, keyPrefix: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((seg, i) => {
+    const m = seg.match(/^\*\*([^*]+)\*\*$/);
+    if (m) {
+      return (
+        <strong key={`${keyPrefix}-b-${i}`} className="font-semibold text-foreground">
+          {m[1]}
+        </strong>
+      );
+    }
+    return <React.Fragment key={`${keyPrefix}-t-${i}`}>{seg}</React.Fragment>;
+  });
+}
+
+/** Renders text with [doc1], [doc2] markers replaced by styled superscript badges,
+ *  and **bold** markdown rendered as bold text.
  *  When citations metadata is provided, hovering a badge shows the source filename. */
 export default function CitedContent({
   content,
@@ -30,7 +48,7 @@ export default function CitedContent({
             </sup>
           );
         }
-        return <span key={i}>{part}</span>;
+        return <React.Fragment key={i}>{renderBold(part, String(i))}</React.Fragment>;
       })}
     </span>
   );
