@@ -273,7 +273,7 @@ function MessageRow({
         className="flex items-start gap-3"
       >
         <NelbAvatar />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 space-y-2">
           <div className="glass rounded-2xl rounded-tl-sm px-5 py-4">
             {brain && (
               <motion.span
@@ -288,11 +288,30 @@ function MessageRow({
             <AllocationMessage
               result={msg.rawResult}
               text={msg.content}
+              citations={msg.citations}
               animate={isStreaming}
               onStreamUpdate={onStreamUpdate}
               onStreamDone={onStreamDone}
             />
           </div>
+
+          {/* Citation chips — outside the glass card, same row as Work Assistant */}
+          {msg.citations && msg.citations.length > 0 && !isStreaming && (
+            <div className="flex flex-wrap gap-2">
+              {msg.citations.map((c) => (
+                <span
+                  key={c.index}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass text-xs text-muted"
+                >
+                  <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-semibold rounded bg-nelb-primary/12 text-nelb-primary">
+                    {c.index}
+                  </span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="text-foreground/80">{c.filename}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </motion.div>
     );
@@ -324,13 +343,31 @@ function MessageRow({
                 text={msg.content}
                 onUpdate={onStreamUpdate}
                 onDone={onStreamDone}
-                render={(shown) => <span className="whitespace-pre-wrap">{shown}</span>}
+                render={(shown) => <CitedContent content={shown} citations={msg.citations} />}
               />
             ) : (
-              <span className="whitespace-pre-wrap">{msg.content}</span>
+              <CitedContent content={msg.content} citations={msg.citations} />
             )}
           </div>
         </div>
+
+        {/* Citation chips — same style as Work Assistant */}
+        {msg.citations && msg.citations.length > 0 && !isStreaming && (
+          <div className="flex flex-wrap gap-2">
+            {msg.citations.map((c) => (
+              <span
+                key={c.index}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass text-xs text-muted"
+              >
+                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-semibold rounded bg-nelb-primary/12 text-nelb-primary">
+                  {c.index}
+                </span>
+                <FileText className="w-3.5 h-3.5" />
+                <span className="text-foreground/80">{c.filename}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -343,12 +380,14 @@ function MessageRow({
 function AllocationMessage({
   result,
   text,
+  citations,
   animate,
   onStreamUpdate,
   onStreamDone,
 }: {
   result: AllocationResponse;
   text: string;
+  citations?: Citation[];
   animate: boolean;
   onStreamUpdate: () => void;
   onStreamDone: () => void;
@@ -434,10 +473,10 @@ function AllocationMessage({
               text={text}
               onUpdate={onStreamUpdate}
               onDone={onStreamDone}
-              render={(shown) => <span className="whitespace-pre-wrap">{shown}</span>}
+              render={(shown) => <CitedContent content={shown} citations={citations} />}
             />
           ) : (
-            <span className="whitespace-pre-wrap">{text}</span>
+            <CitedContent content={text} citations={citations} />
           )}
         </motion.div>
       )}
