@@ -1,11 +1,57 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowUp, History, Wrench, MapPin, Lock } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
+
+/** Free-text coordinate field — commits on blur or Enter, never mid-type. */
+function CoordInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  placeholder: string;
+}) {
+  const [draft, setDraft] = useState(String(value));
+
+  // Sync when parent changes (e.g. map click) while field is not focused
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = useCallback(
+    (raw: string) => {
+      const parsed = parseFloat(raw.trim());
+      if (!isNaN(parsed)) {
+        onChange(parsed);
+        setDraft(String(parsed));
+      } else {
+        setDraft(String(value));
+      }
+    },
+    [onChange, value]
+  );
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      placeholder={placeholder}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      spellCheck={false}
+      className="w-28 text-xs tabular-nums bg-foreground/[0.04] border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-nelb-primary/40"
+    />
+  );
+}
 
 interface FloatingChatInputProps {
   value: string;
@@ -95,9 +141,27 @@ export default function FloatingChatInput({
                   />
                   <span className="text-xs text-foreground font-semibold w-10">{radiusKm}km</span>
                 </div>
-                <p className="mt-2 text-xs text-faint">
-                  Pin: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                </p>
+                <div className="mt-3 flex items-center gap-1.5">
+                  <span className="text-xs text-muted font-medium shrink-0">Pin</span>
+                  <CoordInput
+                    value={latitude}
+                    onChange={(v) => onLocationChange?.(v, longitude)}
+                    placeholder="Latitude"
+                  />
+                  <span className="text-faint text-xs">,</span>
+                  <CoordInput
+                    value={longitude}
+                    onChange={(v) => onLocationChange?.(latitude, v)}
+                    placeholder="Longitude"
+                  />
+                  <button
+                    onClick={() => onLocationChange?.(-25.7463, 28.1885)}
+                    title="Reset to Pretoria CBD"
+                    className="ml-1 text-xs font-medium bg-foreground/[0.04] border border-border rounded-lg px-2 py-1 text-nelb-primary hover:bg-nelb-primary/10 hover:border-nelb-primary/40 transition-colors shrink-0"
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

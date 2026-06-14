@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Label as ListboxLabel } from "@headlessui/react";
 import { Check, ChevronDown, MapPin, Sparkles, ArrowLeft } from "lucide-react";
@@ -11,6 +11,50 @@ import { allocateJob } from "@/lib/api";
 import CitedContent from "@/components/CitedContent";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
+
+/** Free-text coordinate field. Applies on blur or Enter — never mid-type. */
+function CoordInput({
+  value,
+  onChange,
+  title,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  title: string;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const [focused, setFocused] = useState(false);
+
+  // Sync when the map pin is moved externally (but not while the user is typing)
+  useEffect(() => {
+    if (!focused) setDraft(String(value));
+  }, [value, focused]);
+
+  const commit = (raw: string) => {
+    const parsed = parseFloat(raw.trim());
+    if (!isNaN(parsed)) {
+      onChange(parsed);
+      setDraft(String(parsed));
+    } else {
+      setDraft(String(value));
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      title={title}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => { setFocused(false); commit(e.target.value); }}
+      onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+      className="w-28 text-xs tabular-nums bg-foreground/[0.04] border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-nelb-primary/40"
+      placeholder={title}
+      spellCheck={false}
+    />
+  );
+}
 
 const JOB_CATEGORIES = [
   "cleaning", "gardening", "painting", "plumbing", "electrical",
@@ -166,12 +210,31 @@ export default function EmployerPage() {
               {/* Right — live map (stretches to match the form height) */}
               <div className="flex flex-col">
                 <div className="glass rounded-3xl overflow-hidden flex flex-col flex-1">
-                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border shrink-0">
-                    <MapPin className="w-4 h-4 text-nelb-primary" />
-                    <span className="text-sm font-medium">Job location</span>
-                    <span className="text-xs text-faint ml-auto tabular-nums">
-                      {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
-                    </span>
+                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border shrink-0 flex-wrap gap-y-2">
+                    <MapPin className="w-4 h-4 text-nelb-primary shrink-0" />
+                    <span className="text-sm font-medium shrink-0">Job location</span>
+                    {/* Editable coordinates — lets judges jump straight to the demo zone */}
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <CoordInput
+                        value={store.latitude}
+                        onChange={(v) => store.setJobDetails({ latitude: v })}
+                        title="Latitude"
+                      />
+                      <span className="text-faint text-xs">,</span>
+                      <CoordInput
+                        value={store.longitude}
+                        onChange={(v) => store.setJobDetails({ longitude: v })}
+                        title="Longitude"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => store.setJobDetails({ latitude: -25.7463, longitude: 28.1885 })}
+                        title="Reset to Pretoria CBD"
+                        className="ml-1 text-xs font-medium bg-foreground/[0.04] border border-border rounded-lg px-2 py-1 text-nelb-primary hover:bg-nelb-primary/10 hover:border-nelb-primary/40 transition-colors shrink-0"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
                   <div className="flex-1 min-h-[300px]">
                     <MapPicker
