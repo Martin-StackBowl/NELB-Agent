@@ -89,6 +89,54 @@ A practical on-site buddy. Workers ask questions about tools, materials, safety,
 
 The assistant is strictly constrained to civilian job categories. It refuses licensed electrical (high-voltage), gas fitting, structural engineering, and any illegal activity.
 
+### Foundry IQ implementation
+
+Brain 3 uses the **Azure OpenAI "On Your Own Data" pattern** — a single API call to the `gpt-4o-mini` deployment with an `azure_search` data source attached:
+
+```
+POST /openai/deployments/gpt-4o-mini/chat/completions
+{
+  "messages": [...],
+  "data_sources": [{
+    "type": "azure_search",
+    "parameters": {
+      "endpoint": "<AZURE_SEARCH_ENDPOINT>",
+      "index_name": "nelb-trade-guides-index",
+      "authentication": { "type": "api_key" }
+    }
+  }]
+}
+```
+
+**How it works:**
+1. The question arrives at `assist.py`
+2. A safety filter blocks dangerous/out-of-scope topics before any API call
+3. gpt-4o-mini receives the question alongside chunks retrieved from the Azure AI Search index
+4. The model answers using **only** the retrieved content — if the KB doesn't contain the answer, it says so explicitly
+5. Citation markers (`[doc1]`, `[doc2]`) are extracted from the response, deduplicated by document title, and returned as structured citation cards rendered in the UI
+
+**Knowledge base — 14 documents indexed in Azure AI Search:**
+
+| Document | Covers |
+|----------|--------|
+| `drill-bits-and-fasteners.md` | Wall plug/bit matching table, drilling into brick |
+| `cement-and-concrete.md` | Mix ratios, quantity calculations (with worked examples) |
+| `tiling-guide.md` | Adhesive selection, tile quantity formula, grouting |
+| `painting-guide.md` | Coverage calculations, surface prep, drying times |
+| `electrical-basics.md` | Low-voltage only — plug wiring (SA colours), bulb changing |
+| `plumbing-basics.md` | Dripping taps, drain unblocking, running toilet |
+| `carpentry-basics.md` | Wood types, joints, shelf installation, finishing |
+| `ladder-safety.md` | 4-to-1 rule, height limits, when not to use a ladder |
+| `chemical-safety.md` | Bleach/ammonia hazards, ventilation, PPE |
+| `cleaning-guide.md` | Surfaces, products, stain removal, cleaning sequence |
+| `gardening-basics.md` | Mowing, hedge trimming, tree branch removal |
+| `moving-and-lifting.md` | Safe lifting, packing order, vehicle loading |
+| `general-repairs.md` | Wall filling, door/window repairs, silicone sealing |
+| `nelb-allocation-criteria.md` | The 6-step pipeline, scoring weights, fairness formula |
+
+**Why this satisfies the Foundry IQ requirement:**
+The knowledge base is not a generic web scrape — it is a domain-specific corpus built for NELB's exact use case. The `nelb-allocation-criteria.md` document is unique to this system: when a worker asks "why does NELB penalise workers with too many recent jobs?", the cited answer comes exclusively from this document, not from the model's training weights. That is the core Foundry IQ value proposition — cited, grounded, domain-specific answers that cannot hallucinate beyond the source material.
+
 ---
 
 ## Job categories

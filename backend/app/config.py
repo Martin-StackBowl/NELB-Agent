@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     azure_ai_foundry_deployment_chat: str = "gpt-4o-mini"  # Chat model for knowledge base
     azure_ai_foundry_api_version: str = "2025-04-01-preview"
 
+    # Foundry AI Agent (Brain 3 — grounded work assistant with knowledge base)
+    azure_foundry_agent_id: str = ""  # Not used for this agent type
+    azure_foundry_agent_endpoint: str = ""
+    azure_foundry_agent_name: str = "NelbAgent"
+    azure_foundry_agent_version: str = "1"
+
     # Azure Maps
     azure_maps_key: str = ""
 

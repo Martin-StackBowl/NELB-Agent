@@ -168,6 +168,18 @@ DEMO_WORKERS = [
         "address": "Faerie Glen, Pretoria",
         "is_available": True,
     },
+    {
+        "name": "Lerato Mosia",
+        "email": "lerato@demo.nelb",
+        "phone": "+27 71 000 0013",
+        "skills": ["electrical", "general repair"],
+        "reliability_score": 87.0,
+        "price_factor": 1.05,
+        "latitude": -25.7380,
+        "longitude": 28.2200,
+        "address": "Lynnwood Ridge, Pretoria",
+        "is_available": True,
+    },
 ]
 
 # Demo employers
