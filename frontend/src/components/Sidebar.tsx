@@ -172,7 +172,7 @@ export default function Sidebar() {
             <Link
               href="/profile"
               title={!expanded ? "Profile" : undefined}
-              className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`relative flex items-center gap-3 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
                 expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
               } ${
                 pathname === "/profile"
@@ -180,6 +180,12 @@ export default function Sidebar() {
                   : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
               }`}
             >
+              {pathname === "/profile" && !expanded && (
+                <motion.span
+                  layoutId="nav-active"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b ${gradient}`}
+                />
+              )}
               <User className="w-5 h-5 shrink-0" />
               {expanded && <span className="overflow-hidden">Profile</span>}
             </Link>
@@ -192,7 +198,7 @@ export default function Sidebar() {
         <Link
           href="/help"
           title={!expanded ? "Help" : undefined}
-          className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-colors w-full whitespace-nowrap ${
+          className={`relative flex items-center gap-3 rounded-xl text-sm font-medium transition-colors w-full whitespace-nowrap ${
             expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
           } ${
             pathname === "/help"
@@ -200,6 +206,12 @@ export default function Sidebar() {
               : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
           }`}
         >
+          {pathname === "/help" && !expanded && (
+            <motion.span
+              layoutId="nav-active"
+              className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b ${gradient}`}
+            />
+          )}
           <HelpCircle className="w-5 h-5 shrink-0" />
           {expanded && <span className="overflow-hidden">Help</span>}
         </Link>

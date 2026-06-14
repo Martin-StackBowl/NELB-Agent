@@ -7,6 +7,10 @@ import dynamic from "next/dynamic";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
+// Default demo pin (Pretoria CBD) — used to detect whether the user moved it
+const DEFAULT_LAT = -25.7463;
+const DEFAULT_LNG = 28.1885;
+
 /** Free-text coordinate field — commits on blur or Enter, never mid-type. */
 function CoordInput({
   value,
@@ -91,6 +95,10 @@ export default function FloatingChatInput({
 }: FloatingChatInputProps) {
   const [showMap, setShowMap] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Has the user moved the pin away from the default demo location?
+  const pinMoved =
+    Math.abs(latitude - DEFAULT_LAT) > 1e-4 || Math.abs(longitude - DEFAULT_LNG) > 1e-4;
 
   // Auto-grow textarea
   useEffect(() => {
@@ -213,7 +221,9 @@ export default function FloatingChatInput({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   showMap
                     ? "bg-nelb-primary/15 text-nelb-primary ring-1 ring-nelb-primary/30"
-                    : "text-muted hover:bg-foreground/5"
+                    : pinMoved
+                    ? "border border-nelb-secondary/50 text-nelb-secondary bg-nelb-secondary/10"
+                    : "border border-border text-muted bg-foreground/[0.04] hover:bg-foreground/5"
                 }`}
               >
                 <MapPin className="w-3.5 h-3.5" />
