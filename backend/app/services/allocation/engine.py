@@ -409,8 +409,8 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
             )
         elif eliminator == "Distance analysis":
             explanation = (
-                f"No {job_category} workers were found within {radius}km of your location. "
-                f"Try widening the search radius."
+                f"No {job_category} workers were found within {radius}km. "
+                f"Workers may be further out — try widening the radius, or move your pin closer to a serviced area."
             )
         elif eliminator == "Skills filter":
             explanation = (
