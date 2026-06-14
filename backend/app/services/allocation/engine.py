@@ -384,7 +384,7 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         confidence = round(min(1.0, margin * pool_factor + winner_score * 0.4), 2)
 
         explanation = (
-            f"Recommended: {best.worker_name} with a composite score of {best.composite_score}%. "
+            f"Recommended: **{best.worker_name}** with a composite score of {best.composite_score}%. "
             f"Skill match: {best.skill_score}%, "
             f"Reliability (incl. ratings): {best.reliability_score}%, "
             f"Distance: {best.distance_score}% ({best.distance_km}km away), "
