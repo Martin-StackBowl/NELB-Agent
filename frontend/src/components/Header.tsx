@@ -72,7 +72,7 @@ export default function Header() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.97 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute right-0 mt-2 w-72 glass-strong rounded-2xl shadow-2xl overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-72 bg-elevated border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
                   >
                     <div className="px-4 py-2.5 text-xs text-faint font-semibold uppercase tracking-wide border-b border-border">
                       Demo accounts

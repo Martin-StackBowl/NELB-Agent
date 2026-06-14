@@ -138,7 +138,7 @@ export default function EmployerPage() {
                     </ListboxButton>
                     <ListboxOptions
                       transition
-                      className="absolute z-20 mt-1 max-h-60 w-full overflow-auto scroll-area rounded-xl glass-strong shadow-2xl py-1 text-sm focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
+                      className="absolute z-20 mt-1 max-h-60 w-full overflow-auto scroll-area rounded-xl bg-elevated border border-border shadow-2xl py-1 text-sm focus:outline-none transition duration-100 ease-in data-[closed]:opacity-0"
                     >
                       {JOB_CATEGORIES.map((cat) => (
                         <ListboxOption

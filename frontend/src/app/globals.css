@@ -159,6 +159,10 @@ button {
   border: none !important;
   background: var(--elevated) !important;
   font-family: inherit;
+  /* Contain Leaflet's internal pane/control z-indexes (400–1000) so the map
+     can never overlay app chrome like the header dropdown. */
+  position: relative;
+  z-index: 0;
 }
 .leaflet-control-attribution {
   background: color-mix(in srgb, var(--elevated) 70%, transparent) !important;
