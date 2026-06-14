@@ -263,19 +263,18 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             if result.recommendations:
                 pool = len(result.recommendations)
 
-                # Build ranked worker bullets
+                # Build ranked worker bullets — name on its own line, metrics below
                 worker_lines = []
                 for i, w in enumerate(result.recommendations):
-                    line = (
-                        f"#{i+1} **{w.worker_name}** — {w.composite_score}% | "
-                        f"Reliability: {w.reliability_score}% | "
-                        f"Distance: {w.distance_km}km | "
-                        f"Budget fit: {w.budget_score}% (est. R{w.estimated_price:.0f}) | "
-                        f"Fairness: {w.fairness_score}%"
+                    block = (
+                        f"#{i+1}  **{w.worker_name}** — {w.composite_score}%\n"
+                        f"Skill {w.skill_score}% · Reliability {w.reliability_score}% · "
+                        f"Distance {w.distance_km}km · Budget {w.budget_score}% (est. R{w.estimated_price:.0f}) · "
+                        f"Fairness {w.fairness_score}%"
                     )
-                    worker_lines.append(line)
+                    worker_lines.append(block)
 
-                workers_text = "\n".join(worker_lines)
+                workers_text = "\n\n".join(worker_lines)
 
                 response_text = (
                     f"Found {pool} workers for your {tool_args['job_category']} job:\n\n"
