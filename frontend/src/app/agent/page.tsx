@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { runAgent, type RunResponse, type AllocationResponse } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
@@ -55,14 +55,19 @@ export default function AgentPage() {
 
   // Coordinate "New chat" with the sidebar
   const { setActiveCount, nonce } = useChatReset();
+  const lastNonce = useRef(nonce);
   useEffect(() => {
     setActiveCount(messages.length);
   }, [messages.length, setActiveCount]);
   useEffect(() => {
-    // Cleared from the sidebar's New chat action
-    clear();
-    setInput("");
-    setStreamingIdx(null);
+    // Only clear when the nonce actually changes (New chat clicked) — NOT on
+    // mount, otherwise navigating back to this page would wipe the stored chat.
+    if (nonce !== lastNonce.current) {
+      clear();
+      setInput("");
+      setStreamingIdx(null);
+      lastNonce.current = nonce;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nonce]);
 
