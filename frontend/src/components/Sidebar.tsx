@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "@/lib/auth";
 import { useChatReset } from "@/lib/chatReset";
+import { useWorkerStore } from "@/lib/store";
 import {
   Briefcase,
   Wrench,
@@ -30,24 +31,52 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn } = useAuthStore();
-  const { activeCount, requestReset } = useChatReset();
+  const { activeCount: agentCount, requestReset } = useChatReset();
+
+  const workerMode = useWorkerStore((s) => s.activeMode);
+  const memCount = useWorkerStore((s) => s.memoryChatHistory.length);
+  const assistCount = useWorkerStore((s) => s.assistChatHistory.length);
+  const clearWorkerChat = useWorkerStore((s) => s.clearChat);
 
   useEffect(() => setMounted(true), []);
 
+  // Contextual "New chat" — targets the chat you're currently viewing.
+  const isAgent = pathname === "/agent";
+  const isWorker = pathname === "/worker";
+  const workerCount = workerMode === "memory" ? memCount : assistCount;
+
+  // Button + dialog gradient matches the active chat's message colour.
+  const gradient = isWorker
+    ? workerMode === "memory"
+      ? "from-nelb-secondary to-nelb-cyan"
+      : "from-nelb-accent to-nelb-pink"
+    : "from-nelb-primary to-nelb-violet";
+
+  const dialogText = isWorker
+    ? workerMode === "memory"
+      ? "Starting a new chat will clear only the Memory conversation. Your Assist conversation remains unchanged."
+      : "Starting a new chat will clear only the Assist conversation. Your Memory conversation remains unchanged."
+    : "Starting a new chat will clear your current conversation. This can't be undone.";
+
   const handleNewChat = () => {
-    // Only confirm if there's an active conversation to lose.
-    if (pathname === "/agent" && activeCount > 0) {
-      setConfirmNewChat(true);
+    if (isAgent) {
+      if (agentCount > 0) setConfirmNewChat(true);
+      // already on an empty agent chat — nothing to do
+    } else if (isWorker) {
+      if (workerCount > 0) setConfirmNewChat(true);
     } else {
-      requestReset();
+      // Not in a chat — go to Talk to NELB without clearing anything
       router.push("/agent");
     }
   };
 
   const confirmReset = () => {
-    requestReset();
+    if (isWorker) {
+      clearWorkerChat(workerMode);
+    } else {
+      requestReset();
+    }
     setConfirmNewChat(false);
-    router.push("/agent");
   };
 
   return (
@@ -87,7 +116,7 @@ export default function Sidebar() {
       <div className="px-3">
         <button
           onClick={handleNewChat}
-          className={`w-full flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-nelb-primary to-nelb-violet text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01] ${
+          className={`w-full flex items-center gap-2.5 rounded-xl bg-gradient-to-r ${gradient} text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01] ${
             expanded ? "px-3.5 py-2.5 justify-start" : "p-2.5 justify-center"
           }`}
           title={!expanded ? "New chat" : undefined}
@@ -201,13 +230,13 @@ export default function Sidebar() {
                   className="relative w-full max-w-sm glass-strong rounded-2xl p-6 shadow-2xl"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-nelb-primary to-nelb-violet grid place-items-center shrink-0">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center shrink-0`}>
                       <Plus className="w-5 h-5 text-white" />
                     </div>
                     <h3 className="font-semibold text-lg">Start a new chat?</h3>
                   </div>
                   <p className="text-sm text-muted mb-6">
-                    Your current chat will be cleared. This can&apos;t be undone.
+                    {dialogText}
                   </p>
                   <div className="flex justify-end gap-2">
                     <button
@@ -218,7 +247,7 @@ export default function Sidebar() {
                     </button>
                     <button
                       onClick={confirmReset}
-                      className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-nelb-primary to-nelb-violet text-white shadow-lg shadow-nelb-primary/25 hover:scale-[1.02] transition-transform"
+                      className={`px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r ${gradient} text-white shadow-lg shadow-nelb-primary/25 hover:scale-[1.02] transition-transform`}
                     >
                       New chat
                     </button>

@@ -98,6 +98,7 @@ interface WorkerState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setMode: (mode: "memory" | "assist") => void;
+  clearChat: (mode: "memory" | "assist") => void;
   reset: () => void;
 }
 
@@ -125,6 +126,12 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading, error: null }),
   setError: (error) => set({ error, isLoading: false }),
   setMode: (mode) => set({ activeMode: mode }),
+  clearChat: (mode) =>
+    set(
+      mode === "memory"
+        ? { memoryChatHistory: [] }
+        : { assistChatHistory: [] }
+    ),
   reset: () =>
     set({
       workerId: "",
