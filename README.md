@@ -126,17 +126,28 @@ See `ARCHITECTURE.md` for the full system diagram.
 
 ## Running locally
 
-**Prerequisites:** Docker Desktop · Node.js 20+ · Python 3.11+ (virtual environment)
+**Prerequisites:** Docker Desktop · Node.js 20+ · Python 3.11+
 
-**Backend:**
+**1. Database** (from the project root):
+```bash
+docker compose up -d db          # starts PostgreSQL 16
+```
+
+**2. Backend** (from `backend/`):
 ```bash
 cd backend
-docker compose up -d db          # start PostgreSQL
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
+pip install -e ".[dev]"          # install dependencies
 python seed.py                    # create + populate demo data (safe to re-run)
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-**Frontend:**
+**3. Frontend** (from `frontend/`, in a second terminal):
 ```bash
 cd frontend
 npm install
@@ -145,7 +156,21 @@ npm run dev
 
 Open http://localhost:3000.
 
-**Environment:** copy `backend/.env.example` to `backend/.env` and add your Azure AI Foundry + Azure AI Search credentials. Without them, the allocation reasoning still runs fully; only the Foundry IQ grounded answers require configuration.
+### Configuration & what runs without it
+
+The database connection works out of the box against the Docker container (no `.env` required for the DB).
+
+To enable the Azure-powered features, copy `backend/.env.example` to `backend/.env` and add your **Azure AI Foundry** and **Azure AI Search** credentials.
+
+| Feature | Works without Azure keys? |
+|---------|---------------------------|
+| **Find Workers** — full 6-step allocation, reasoning trace, scoring | ✅ Yes (pure Python) |
+| Memory recall (direct) | ✅ Yes |
+| **Talk to NELB** — the unified agent / brain-switching | ❌ Needs Azure AI Foundry (o4-mini) |
+| **Work Assistant** — Foundry IQ grounded, cited answers | ❌ Needs Azure AI Foundry + Azure AI Search |
+| Allocation decisive-factor enrichment (citations) | ❌ Needs Foundry IQ |
+
+> Without credentials, you can still run and inspect the deterministic allocation engine end-to-end. The full agent experience (brain-switching, grounded citations) is shown in the demo video and requires Azure resources to reproduce live.
 
 ---
 
