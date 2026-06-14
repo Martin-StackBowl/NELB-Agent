@@ -219,7 +219,7 @@ export default function AgentPage() {
           onRadiusChange={setRadiusKm}
         />
         <p className="text-center text-[11px] text-faint mt-2 flex items-center justify-center gap-1">
-          <Sparkles className="w-3 h-3" /> NELB reasons over skills, reliability, distance & fairness.
+          <Sparkles className="w-3 h-3" /> NELB reasons over skills, reliability, distance, budget & fairness.
         </p>
       </div>
     </div>
