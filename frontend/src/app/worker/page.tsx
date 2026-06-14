@@ -181,18 +181,18 @@ export default function WorkerPage() {
                     </div>
 
                     {msg.citations && msg.citations.length > 0 && !isStreaming && (
-                      <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
                         {msg.citations.map((c) => (
-                          <div
+                          <span
                             key={c.index}
-                            className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-xs text-muted"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass text-xs text-muted"
                           >
-                            <span className="font-semibold text-nelb-primary">{c.index}</span>
-                            <span className="text-faint">·</span>
+                            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-semibold rounded bg-nelb-primary/12 text-nelb-primary">
+                              {c.index}
+                            </span>
                             <FileText className="w-3.5 h-3.5" />
                             <span className="text-foreground/80">{c.filename}</span>
-                            <span className="text-faint ml-auto">nelb-trade-guides</span>
-                          </div>
+                          </span>
                         ))}
                       </div>
                     )}
