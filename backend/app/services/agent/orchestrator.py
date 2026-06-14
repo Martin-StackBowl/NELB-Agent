@@ -299,17 +299,22 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             )
         
         elif tool_name == "recall_memory":
+            if not request.worker_id:
+                return RunResponse(
+                    tool_used="recall_memory",
+                    response="You'll need to log in first so I know whose work history to look up. Use the Log in button in the top-right corner.",
+                    raw_result=None,
+                )
             from app.services.memory.recall import recall_memory
             from app.schemas.agent import RecallRequest
-            from uuid import UUID
-            
+
             recall_request = RecallRequest(
-                worker_id=UUID(tool_args["worker_id"]),
-                query=tool_args["query"],
+                worker_id=request.worker_id,  # authenticated identity, not LLM-supplied
+                query=tool_args.get("query", request.message),
             )
-            
+
             result = await recall_memory(recall_request, db)
-            
+
             return RunResponse(
                 tool_used="recall_memory",
                 response=result.answer,
@@ -336,12 +341,17 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
             )
         
         elif tool_name == "profile_lookup":
+            if not request.worker_id:
+                return RunResponse(
+                    tool_used="profile_lookup",
+                    response="You'll need to log in first so I can pull up your profile. Use the Log in button in the top-right corner.",
+                    raw_result=None,
+                )
             from app.services.profile.lookup import profile_lookup
             from app.schemas.agent import ProfileRequest
-            from uuid import UUID
-            
+
             profile_request = ProfileRequest(
-                worker_id=UUID(tool_args["worker_id"]),
+                worker_id=request.worker_id,  # authenticated identity, not LLM-supplied
             )
             
             result = await profile_lookup(profile_request, db)
