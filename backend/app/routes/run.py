@@ -179,8 +179,8 @@ async def run_agent(request: RunRequest, db: AsyncSession = Depends(get_db)):
             # Execute the appropriate brain
             if tool_name == "allocate_job":
                 # Need coordinates for allocation
-                lat = request.latitude or -25.7479  # Default Pretoria
-                lng = request.longitude or 28.2293
+                lat = request.latitude or -25.7463  # Default Pretoria CBD
+                lng = request.longitude or 28.1885
 
                 alloc_request = AllocationRequest(
                     job_category=tool_args["job_category"],

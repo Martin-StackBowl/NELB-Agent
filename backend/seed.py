@@ -28,8 +28,9 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0001",
         "skills": ["cleaning", "gardening"],
         "reliability_score": 95.0,
-        "latitude": -25.7479,
-        "longitude": 28.2293,
+        "price_factor": 0.95,
+        "latitude": -25.7463,
+        "longitude": 28.1885,
         "address": "Hatfield, Pretoria",
         "is_available": True,
     },
@@ -40,6 +41,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0002",
         "skills": ["painting", "tiling", "general repair"],
         "reliability_score": 88.0,
+        "price_factor": 1.10,
         "latitude": -25.7625,
         "longitude": 28.2120,
         "address": "Sunnyside, Pretoria",
@@ -51,6 +53,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0003",
         "skills": ["cleaning", "moving"],
         "reliability_score": 92.0,
+        "price_factor": 0.90,
         "latitude": -25.7330,
         "longitude": 28.2515,
         "address": "Brooklyn, Pretoria",
@@ -62,6 +65,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0004",
         "skills": ["plumbing", "carpentry", "general repair"],
         "reliability_score": 78.0,
+        "price_factor": 1.05,
         "latitude": -25.7800,
         "longitude": 28.2800,
         "address": "Garsfontein, Pretoria",
@@ -73,6 +77,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0005",
         "skills": ["gardening", "cleaning"],
         "reliability_score": 96.0,
+        "price_factor": 0.85,
         "latitude": -25.7550,
         "longitude": 28.2400,
         "address": "Arcadia, Pretoria",
@@ -84,6 +89,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0006",
         "skills": ["electrical", "plumbing", "general repair"],
         "reliability_score": 85.0,
+        "price_factor": 1.20,
         "latitude": -25.7700,
         "longitude": 28.1900,
         "address": "Centurion, Pretoria",
@@ -95,6 +101,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0007",
         "skills": ["painting", "cleaning"],
         "reliability_score": 91.0,
+        "price_factor": 1.00,
         "latitude": -25.7400,
         "longitude": 28.2650,
         "address": "Lynnwood, Pretoria",
@@ -107,6 +114,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0008",
         "skills": ["carpentry", "tiling", "painting"],
         "reliability_score": 82.0,
+        "price_factor": 1.15,
         "latitude": -25.7200,
         "longitude": 28.2300,
         "address": "Riviera, Pretoria",
@@ -118,6 +126,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0009",
         "skills": ["moving", "cleaning", "general repair"],
         "reliability_score": 45.0,  # Intentionally low for testing reliability filter
+        "price_factor": 0.80,
         "latitude": -25.7600,
         "longitude": 28.2200,
         "address": "Muckleneuk, Pretoria",
@@ -129,6 +138,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0010",
         "skills": ["tiling", "painting", "carpentry"],
         "reliability_score": 89.0,
+        "price_factor": 1.10,
         "latitude": -25.7900,
         "longitude": 28.3100,
         "address": "Moreleta Park, Pretoria",
@@ -140,6 +150,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0011",
         "skills": ["cleaning", "gardening", "painting"],
         "reliability_score": 94.0,
+        "price_factor": 0.95,
         "latitude": -25.7450,
         "longitude": 28.2100,
         "address": "Colbyn, Pretoria",
@@ -151,6 +162,7 @@ DEMO_WORKERS = [
         "phone": "+27 71 000 0012",
         "skills": ["general repair", "moving", "carpentry"],
         "reliability_score": 75.0,
+        "price_factor": 0.90,
         "latitude": -25.8100,
         "longitude": 28.2500,
         "address": "Faerie Glen, Pretoria",
@@ -191,6 +203,8 @@ async def seed():
     """Seed the database with demo data."""
 
     async with engine.begin() as conn:
+        # Clean reset so schema changes (e.g. new columns) always apply.
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with async_session() as session:

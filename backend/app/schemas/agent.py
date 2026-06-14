@@ -15,7 +15,7 @@ class JobLocation(BaseModel):
 class AllocationRequest(BaseModel):
     job_category: str = Field(..., description="Job category, e.g. 'cleaning', 'painting', 'tiling'")
     description: str = Field(..., description="Job description from the employer")
-    budget: float = Field(..., gt=0, description="Budget in local currency")
+    budget: float = Field(..., ge=0, description="Budget in local currency (0 = unspecified)")
     location: JobLocation
     radius_km: float = Field(default=5.0, gt=0, le=50)
     exclude_worker_id: UUID | None = Field(default=None, description="Worker ID to exclude from allocation (self-exclusion)")
@@ -28,6 +28,8 @@ class WorkerScore(BaseModel):
     reliability_score: float
     distance_score: float
     fairness_score: float
+    budget_score: float
+    estimated_price: float
     composite_score: float
     distance_km: float
     skills: list[str]

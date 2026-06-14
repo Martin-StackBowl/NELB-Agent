@@ -42,6 +42,27 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * c
 
 
+# Typical market price (ZAR, total per job) for each category. Used as the
+# baseline when a worker has no completed jobs in that category yet, scaled by
+# the worker's price positioning (price_factor).
+CATEGORY_BASE_RATES: dict[str, float] = {
+    "cleaning": 400.0,
+    "gardening": 450.0,
+    "painting": 1200.0,
+    "plumbing": 600.0,
+    "electrical": 800.0,
+    "tiling": 2500.0,
+    "carpentry": 1500.0,
+    "moving": 900.0,
+    "general repair": 600.0,
+}
+DEFAULT_BASE_RATE = 600.0
+
+# A worker is eliminated when their expected price exceeds the budget by more
+# than this fraction. Within the band, the budget score decays linearly.
+BUDGET_OVER_TOLERANCE = 0.30
+
+
 async def allocate_job(request: AllocationRequest, db: AsyncSession) -> AllocationResponse:
     """Run the full 5-step allocation pipeline."""
 
@@ -158,12 +179,69 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         eliminated=step4_eliminated,
     ))
 
-    # --- Step 5: Fairness analysis ---
-    fairness_window = datetime.now(timezone.utc) - timedelta(days=settings.fairness_window_days)
-    scored_workers: list[WorkerScore] = []
-    step5_notes = []
+    # --- Step 5: Budget fit ---
+    budget = request.budget or 0.0
+    has_budget = budget > 0
+    budget_workers = []
+    step5_eliminated = []
+
+    # Ground each worker's expected price in their real job history for this
+    # category when available; otherwise fall back to the category baseline
+    # scaled by their price positioning.
+    price_map: dict = {}
+    if distance_workers:
+        ids = [w.id for (w, *_rest) in distance_workers]
+        price_result = await db.execute(
+            select(JobHistory.worker_id, func.avg(JobHistory.payment_amount))
+            .where(JobHistory.worker_id.in_(ids))
+            .where(func.lower(JobHistory.category) == job_category)
+            .group_by(JobHistory.worker_id)
+        )
+        price_map = {row[0]: float(row[1]) for row in price_result.all() if row[1]}
+
+    base_rate = CATEGORY_BASE_RATES.get(job_category, DEFAULT_BASE_RATE)
 
     for w, skill_score, distance_score, dist_km in distance_workers:
+        if w.id in price_map:
+            estimate = price_map[w.id]
+        else:
+            estimate = base_rate * getattr(w, "price_factor", 1.0)
+
+        if not has_budget:
+            budget_workers.append((w, skill_score, distance_score, dist_km, 1.0, estimate))
+            continue
+
+        ratio = estimate / budget
+        if ratio <= 1.0:
+            budget_workers.append((w, skill_score, distance_score, dist_km, 1.0, estimate))
+        elif ratio <= 1.0 + BUDGET_OVER_TOLERANCE:
+            budget_score = max(0.0, 1.0 - (ratio - 1.0) / BUDGET_OVER_TOLERANCE)
+            budget_workers.append((w, skill_score, distance_score, dist_km, budget_score, estimate))
+        else:
+            over_pct = (ratio - 1.0) * 100
+            step5_eliminated.append(f"{w.name} (est. R{estimate:.0f} — {over_pct:.0f}% over R{budget:.0f} budget)")
+
+    reasoning_steps.append(ReasoningStep(
+        step=5,
+        name="Budget fit",
+        description=(
+            f"Comparing each worker's expected price for '{job_category}' to the R{budget:.0f} budget."
+            if has_budget
+            else "No budget specified — all candidates pass this step."
+        ),
+        candidates_before=len(distance_workers),
+        candidates_after=len(budget_workers),
+        eliminated=step5_eliminated
+        if step5_eliminated
+        else (["All within budget"] if has_budget else ["No budget filter applied"]),
+    ))
+
+    # --- Step 6: Fairness analysis ---
+    fairness_window = datetime.now(timezone.utc) - timedelta(days=settings.fairness_window_days)
+    scored_workers: list[WorkerScore] = []
+    step6_notes = []
+
+    for w, skill_score, distance_score, dist_km, budget_score, estimated_price in budget_workers:
         # Count jobs completed by this worker in the fairness window
         job_count_result = await db.execute(
             select(func.count(JobHistory.id))
@@ -176,19 +254,20 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         if recent_jobs >= settings.fairness_threshold_jobs:
             overage = recent_jobs - settings.fairness_threshold_jobs
             fairness_score = max(0.0, 1.0 - (overage * 0.25))
-            step5_notes.append(f"{w.name}: {recent_jobs} jobs in {settings.fairness_window_days}d — penalty applied")
+            step6_notes.append(f"{w.name}: {recent_jobs} jobs in {settings.fairness_window_days}d — penalty applied")
         else:
             fairness_score = 1.0
 
         # Normalise reliability to 0-1
         reliability_norm = w.reliability_score / 100.0
 
-        # Composite score
+        # Composite score (weights re-balanced to include budget fit)
         composite = (
-            skill_score * 0.30
-            + reliability_norm * 0.25
-            + distance_score * 0.25
+            skill_score * 0.25
+            + reliability_norm * 0.20
+            + distance_score * 0.20
             + fairness_score * 0.20
+            + budget_score * 0.15
         )
 
         scored_workers.append(WorkerScore(
@@ -198,6 +277,8 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
             reliability_score=round(reliability_norm * 100, 1),
             distance_score=round(distance_score * 100, 1),
             fairness_score=round(fairness_score * 100, 1),
+            budget_score=round(budget_score * 100, 1),
+            estimated_price=round(estimated_price, 2),
             composite_score=round(composite * 100, 1),
             distance_km=round(dist_km, 2),
             skills=w.skills,
@@ -205,12 +286,12 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
         ))
 
     reasoning_steps.append(ReasoningStep(
-        step=5,
+        step=6,
         name="Fairness analysis",
         description=f"Checking job count in last {settings.fairness_window_days} days. Threshold: {settings.fairness_threshold_jobs} jobs.",
-        candidates_before=len(distance_workers),
+        candidates_before=len(budget_workers),
         candidates_after=len(scored_workers),
-        eliminated=step5_notes if step5_notes else ["No fairness penalties applied"],
+        eliminated=step6_notes if step6_notes else ["No fairness penalties applied"],
     ))
 
     # Sort by composite score, take top N
@@ -224,6 +305,8 @@ async def allocate_job(request: AllocationRequest, db: AsyncSession) -> Allocati
             f"Recommended: {best.worker_name} with a composite score of {best.composite_score}%. "
             f"Skill match: {best.skill_score}%, Reliability: {best.reliability_score}%, "
             f"Distance: {best.distance_score}% ({best.distance_km}km away), "
+            f"Budget fit: {best.budget_score}% (est. R{best.estimated_price:.0f}"
+            f"{f' vs R{request.budget:.0f} budget' if request.budget else ''}), "
             f"Fairness: {best.fairness_score}% ({best.recent_jobs_7d} jobs in last {settings.fairness_window_days} days). "
             f"Evaluated {total_evaluated} workers total, {len(top_recommendations)} recommended."
         )

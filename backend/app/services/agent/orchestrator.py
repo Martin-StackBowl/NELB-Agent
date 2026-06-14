@@ -57,7 +57,7 @@ You have access to four tools:
 - When you call a tool and get results, answer ONLY the specific question asked. Do not dump the entire result — extract the relevant piece. For example, if asked "what's my rating?" just say "Your average rating is 4.8/5" — don't list all profile fields.
 
 **Location coordinates for common Pretoria areas:**
-- Hatfield: -25.7479, 28.2293
+- Pretoria CBD: -25.7463, 28.1885
 - Sunnyside: -25.7625, 28.2120
 - Brooklyn: -25.7330, 28.2515
 - Centurion: -25.7700, 28.1900
@@ -243,6 +243,7 @@ async def run_agent(request: RunRequest, db: AsyncSession) -> RunResponse:
                     address="",
                 ),
                 radius_km=tool_args.get("radius_km", 5.0),
+                exclude_worker_id=request.worker_id,  # self-exclusion: logged-in worker cannot hire themselves
             )
             
             result = await allocate_job(allocation_request, db)

@@ -21,4 +21,5 @@ class Worker(Base):
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     address: Mapped[str] = mapped_column(String(500), default="")
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
+    price_factor: Mapped[float] = mapped_column(Float, default=1.0)
     auth_user_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=True)

@@ -135,15 +135,20 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-3 py-3 space-y-1 border-t border-border">
-        <button
+        <Link
+          href="/help"
           title={!expanded ? "Help" : undefined}
-          className={`flex items-center gap-3 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-foreground/[0.04] transition-colors w-full whitespace-nowrap ${
+          className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-colors w-full whitespace-nowrap ${
             expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
+          } ${
+            pathname === "/help"
+              ? "bg-foreground/[0.06] text-foreground"
+              : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
           }`}
         >
           <HelpCircle className="w-5 h-5 shrink-0" />
           {expanded && <span className="overflow-hidden">Help</span>}
-        </button>
+        </Link>
       </div>
     </motion.aside>
   );

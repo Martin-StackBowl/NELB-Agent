@@ -43,8 +43,8 @@ export default function AgentPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingIdx, setStreamingIdx] = useState<number | null>(null);
-  const [latitude, setLatitude] = useState(-25.7479);
-  const [longitude, setLongitude] = useState(28.2293);
+  const [latitude, setLatitude] = useState(-25.7463);
+  const [longitude, setLongitude] = useState(28.1885);
   const [radiusKm, setRadiusKm] = useState(5);
 
   const { ref, atBottom, onScroll, scrollToBottom, stick } = useChatScroll(

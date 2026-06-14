@@ -129,21 +129,21 @@ export default function Home() {
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold mb-8">How NELB reasons</h2>
           <motion.div
-            className="flex flex-wrap items-center justify-center gap-3 text-sm"
+            className="flex flex-nowrap items-center justify-center gap-2 text-sm overflow-x-auto"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            {["Skills filter", "Reliability", "Availability", "Distance", "Fairness"].map((step, i) => (
-              <div key={step} className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-full font-medium text-foreground/90">
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-nelb-primary to-nelb-violet text-white text-xs grid place-items-center font-bold">
+            {["Skills filter", "Reliability", "Availability", "Distance", "Budget fit", "Fairness"].map((step, i) => (
+              <div key={step} className="flex items-center gap-2 shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 glass rounded-full text-xs font-medium text-foreground/90">
+                  <span className="w-4 h-4 rounded-full bg-gradient-to-br from-nelb-primary to-nelb-violet text-white text-[10px] grid place-items-center font-bold shrink-0">
                     {i + 1}
                   </span>
                   {step}
                 </span>
-                {i < 4 && <span className="text-faint">→</span>}
+                {i < 5 && <span className="text-faint">→</span>}
               </div>
             ))}
           </motion.div>

@@ -28,6 +28,8 @@ export interface WorkerScore {
   reliability_score: number;
   distance_score: number;
   fairness_score: number;
+  budget_score: number;
+  estimated_price: number;
   composite_score: number;
   distance_km: number;
   skills: string[];

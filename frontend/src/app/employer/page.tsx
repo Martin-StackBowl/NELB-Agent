@@ -59,9 +59,9 @@ export default function EmployerPage() {
               <p className="text-muted mt-1">Describe what you need. NELB finds the fairest match nearby.</p>
             </header>
 
-            <form onSubmit={handleSubmit} className="grid lg:grid-cols-2 gap-6 items-start">
+            <form onSubmit={handleSubmit} className="grid lg:grid-cols-2 gap-6">
               {/* Left — fields */}
-              <div className="glass rounded-3xl p-6 space-y-5">
+              <div className="glass rounded-3xl p-6 space-y-6">
                 {/* Category */}
                 <Listbox value={store.category} onChange={(val) => store.setJobDetails({ category: val })}>
                   <ListboxLabel className="block text-sm font-medium text-foreground mb-1.5">
@@ -139,21 +139,7 @@ export default function EmployerPage() {
                   />
                 </div>
 
-                {/* Radius */}
-                <div>
-                  <label className="flex items-center justify-between text-sm font-medium text-foreground mb-1.5">
-                    <span>Search radius</span>
-                    <span className="text-nelb-primary font-semibold">{store.radiusKm} km</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={1}
-                    max={20}
-                    value={store.radiusKm}
-                    onChange={(e) => store.setJobDetails({ radiusKm: Number(e.target.value) })}
-                    className="w-full accent-nelb-primary"
-                  />
-                </div>
+                {/* Radius lives inside the map card for spatial context */}
 
                 {store.error && <p className="text-nelb-pink text-sm">{store.error}</p>}
 
@@ -177,17 +163,17 @@ export default function EmployerPage() {
                 </button>
               </div>
 
-              {/* Right — live map */}
-              <div className="lg:sticky lg:top-4">
-                <div className="glass rounded-3xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border">
+              {/* Right — live map (stretches to match the form height) */}
+              <div className="flex flex-col">
+                <div className="glass rounded-3xl overflow-hidden flex flex-col flex-1">
+                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border shrink-0">
                     <MapPin className="w-4 h-4 text-nelb-primary" />
                     <span className="text-sm font-medium">Job location</span>
                     <span className="text-xs text-faint ml-auto tabular-nums">
                       {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
                     </span>
                   </div>
-                  <div className="h-[440px]">
+                  <div className="flex-1 min-h-[300px]">
                     <MapPicker
                       latitude={store.latitude}
                       longitude={store.longitude}
@@ -195,9 +181,21 @@ export default function EmployerPage() {
                       onLocationSelect={handleLocationSelect}
                     />
                   </div>
-                  <p className="px-5 py-3 text-xs text-faint border-t border-border">
-                    Click anywhere on the map to drop your pin.
-                  </p>
+                  {/* Radius slider */}
+                  <div className="px-5 py-3.5 border-t border-border shrink-0">
+                    <label className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
+                      <span>Search radius</span>
+                      <span className="text-nelb-primary font-semibold">{store.radiusKm} km</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={20}
+                      value={store.radiusKm}
+                      onChange={(e) => store.setJobDetails({ radiusKm: Number(e.target.value) })}
+                      className="w-full accent-nelb-primary"
+                    />
+                  </div>
                 </div>
               </div>
             </form>
@@ -286,7 +284,10 @@ function Results({ onBack }: { onBack: () => void }) {
                 <span className="font-semibold text-foreground">{w.worker_name}</span>
                 <span className="text-sm text-muted ml-2">{w.distance_km}km away</span>
               </div>
-              <span className="text-lg font-bold text-gradient">{w.composite_score}%</span>
+              <div className="text-right">
+                <span className="text-lg font-bold text-gradient">{w.composite_score}%</span>
+                <p className="text-xs text-faint tabular-nums">~R{Math.round(w.estimated_price)}</p>
+              </div>
             </div>
             <div className="flex gap-2 mt-3 flex-wrap">
               {w.skills.map((skill) => (
@@ -295,10 +296,11 @@ function Results({ onBack }: { onBack: () => void }) {
                 </span>
               ))}
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-xs text-muted">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3 text-xs text-muted">
               <ScoreBar label="Skill" value={w.skill_score} />
               <ScoreBar label="Reliability" value={w.reliability_score} />
               <ScoreBar label="Distance" value={w.distance_score} />
+              <ScoreBar label="Budget" value={w.budget_score} />
               <ScoreBar label="Fairness" value={w.fairness_score} />
             </div>
           </motion.div>

@@ -119,3 +119,59 @@ class TestAllocationEngineLogic:
         candidates = list(range(12))  # 12 candidates
         top = candidates[:max_recommendations]
         assert len(top) == 5
+
+
+class TestBudgetFit:
+    """Test the budget-fit scoring logic (Step 5)."""
+
+    TOL = 0.30
+
+    def _budget_score(self, estimate: float, budget: float):
+        """Mirror of the engine's budget logic. Returns score or None if eliminated."""
+        if budget <= 0:
+            return 1.0
+        ratio = estimate / budget
+        if ratio <= 1.0:
+            return 1.0
+        if ratio <= 1.0 + self.TOL:
+            return max(0.0, 1.0 - (ratio - 1.0) / self.TOL)
+        return None  # eliminated
+
+    def test_within_budget_full_score(self):
+        assert self._budget_score(400, 500) == 1.0
+
+    def test_exactly_on_budget_full_score(self):
+        assert self._budget_score(500, 500) == 1.0
+
+    def test_cheaper_not_rewarded_above_full(self):
+        """Being far cheaper still caps at 1.0 — no race to the bottom."""
+        assert self._budget_score(200, 500) == 1.0
+
+    def test_slightly_over_budget_partial_score(self):
+        # 15% over, tolerance 30% -> halfway decay -> 0.5
+        assert self._budget_score(575, 500) == pytest.approx(0.5)
+
+    def test_at_tolerance_edge_scores_zero(self):
+        # exactly 30% over -> score 0 but not eliminated
+        assert self._budget_score(650, 500) == pytest.approx(0.0)
+
+    def test_far_over_budget_eliminated(self):
+        # 40% over -> beyond tolerance -> eliminated
+        assert self._budget_score(700, 500) is None
+
+    def test_no_budget_is_neutral(self):
+        assert self._budget_score(2500, 0) == 1.0
+
+    def test_composite_includes_budget_weight(self):
+        """Composite uses the re-balanced 25/20/20/20/15 weights summing to 1.0."""
+        skill, reliability, distance, fairness, budget = 1.0, 0.9, 0.8, 1.0, 1.0
+        composite = (
+            skill * 0.25
+            + reliability * 0.20
+            + distance * 0.20
+            + fairness * 0.20
+            + budget * 0.15
+        )
+        weights_sum = 0.25 + 0.20 + 0.20 + 0.20 + 0.15
+        assert weights_sum == pytest.approx(1.0)
+        assert composite == pytest.approx(0.25 + 0.18 + 0.16 + 0.20 + 0.15)

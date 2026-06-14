@@ -41,8 +41,8 @@ export const useJobStore = create<JobState>((set) => ({
   category: "",
   description: "",
   budget: 0,
-  latitude: -25.7479, // Default: Pretoria
-  longitude: 28.2293,
+  latitude: -25.7463, // Default: Pretoria CBD
+  longitude: 28.1885,
   address: "",
   radiusKm: 5,
   allocation: null,
