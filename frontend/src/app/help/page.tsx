@@ -25,7 +25,7 @@ const brains = [
     color: "text-nelb-primary",
     tint: "bg-nelb-primary/10",
     summary:
-      "Runs a 5-step reasoning pipeline to rank the best workers for a job — skills, reliability, availability, distance, then fairness. It's real Python logic, not a prompt, and every decision comes with a visible trace.",
+      "A 6-step reasoning pipeline that ranks the best workers for a job — skills, reliability, availability, distance, budget fit, and fairness. Real Python logic, not a prompt, and every decision comes with a visible trace.",
   },
   {
     icon: History,
@@ -169,7 +169,7 @@ export default function HelpPage() {
             ))}
             <div className="pt-4 mt-2 border-t border-border">
               <p className="text-sm text-muted">
-                Workers who clear all five filters are then ranked by a weighted score.
+                Workers who clear all six steps are then ranked by a weighted score.
                 These weights decide the <span className="text-foreground font-medium">order</span> of the
                 survivors — they don&apos;t override the filters above (a worker already
                 eliminated for low reliability or distance never reaches this stage):
