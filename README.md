@@ -81,7 +81,7 @@ NELB parses intent (category, time period, client hints), queries PostgreSQL, an
 
 ## Brain 3 — Work Assistant (Foundry IQ)
 
-A practical on-site buddy. Workers ask questions about tools, materials, safety, and calculations. Answers are **grounded via Foundry IQ** — retrieved from an indexed knowledge base with cited sources. This satisfies the mandatory IQ requirement and makes the assistant meaningfully more reliable than a raw LLM call.
+A practical on-site buddy. Workers ask questions about tools, materials, safety, and calculations. Answers are **grounded via Foundry IQ** — retrieved from an indexed knowledge base with cited sources. The assistant answers only from retrieved content; if the knowledge base doesn't contain the answer, it says so.
 
 - *"Which drill bit for a 6mm wall plug in brick?"*
 - *"How many bags of cement for a 3m × 4m slab at 100mm depth?"*
@@ -135,7 +135,7 @@ POST /openai/deployments/gpt-4o-mini/chat/completions
 | `nelb-allocation-criteria.md` | The 6-step pipeline, scoring weights, fairness formula |
 
 **Why this satisfies the Foundry IQ requirement:**
-The knowledge base is not a generic web scrape — it is a domain-specific corpus built for NELB's exact use case. The `nelb-allocation-criteria.md` document is unique to this system: when a worker asks "why does NELB penalise workers with too many recent jobs?", the cited answer comes exclusively from this document, not from the model's training weights. That is the core Foundry IQ value proposition — cited, grounded, domain-specific answers that cannot hallucinate beyond the source material.
+The knowledge base is not a generic web scrape — it is a domain-specific corpus built for NELB's exact use case. The `nelb-allocation-criteria.md` document exists only in this system: when a worker asks "why does NELB penalise workers with too many recent jobs?", the cited answer comes exclusively from this document, not from the model's training weights. The citation is the proof of grounding.
 
 ---
 
