@@ -9,6 +9,7 @@ import FloatingChatInput from "@/components/FloatingChatInput";
 import StreamingText from "@/components/StreamingText";
 import CitedContent from "@/components/CitedContent";
 import { useChatReset } from "@/lib/chatReset";
+import { useAgentChat } from "@/lib/agentChat";
 import {
   Brain,
   Briefcase,
@@ -40,8 +41,8 @@ const BRAIN_META: Record<string, { label: string; cls: string }> = {
 
 export default function AgentPage() {
   const { currentUser } = useAuthStore();
+  const { messages, addMessage, clear } = useAgentChat();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingIdx, setStreamingIdx] = useState<number | null>(null);
   const [latitude, setLatitude] = useState(-25.7463);
@@ -59,7 +60,7 @@ export default function AgentPage() {
   }, [messages.length, setActiveCount]);
   useEffect(() => {
     // Cleared from the sidebar's New chat action
-    setMessages([]);
+    clear();
     setInput("");
     setStreamingIdx(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,7 +70,7 @@ export default function AgentPage() {
     if (!input.trim() || isLoading) return;
     const userMessage = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage, timestamp: Date.now() }]);
+    addMessage({ role: "user", content: userMessage, timestamp: Date.now() });
     setIsLoading(true);
 
     try {
@@ -85,35 +86,26 @@ export default function AgentPage() {
         worker_id: currentUser?.worker_id,
       });
 
-      setMessages((prev) => {
-        const citations =
-          result.raw_result && "citations" in result.raw_result
-            ? (result.raw_result as { citations?: Citation[] }).citations
-            : undefined;
-        const next = [
-          ...prev,
-          {
-            role: "agent" as const,
-            content: result.response,
-            toolUsed: result.tool_used,
-            rawResult:
-              result.tool_used === "allocate_job" ? (result.raw_result as AllocationResponse) : null,
-            citations,
-            timestamp: Date.now(),
-          },
-        ];
-        setStreamingIdx(next.length - 1);
-        return next;
+      const citations =
+        result.raw_result && "citations" in result.raw_result
+          ? (result.raw_result as { citations?: Citation[] }).citations
+          : undefined;
+      addMessage({
+        role: "agent",
+        content: result.response,
+        toolUsed: result.tool_used,
+        rawResult:
+          result.tool_used === "allocate_job" ? (result.raw_result as AllocationResponse) : null,
+        citations,
+        timestamp: Date.now(),
       });
+      setStreamingIdx(useAgentChat.getState().messages.length - 1);
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "agent",
-          content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}`,
-          timestamp: Date.now(),
-        },
-      ]);
+      addMessage({
+        role: "agent",
+        content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}`,
+        timestamp: Date.now(),
+      });
     }
     setIsLoading(false);
   };

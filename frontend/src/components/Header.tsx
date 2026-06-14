@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore, DEMO_WORKERS } from "@/lib/auth";
 import { useWorkerStore, useJobStore } from "@/lib/store";
+import { useAgentChat } from "@/lib/agentChat";
 import { useTheme } from "@/lib/theme";
 import { LogIn, LogOut, User, Moon, Sun, ChevronDown } from "lucide-react";
 
@@ -24,6 +25,7 @@ export default function Header() {
     logout();
     useWorkerStore.getState().reset();
     useJobStore.getState().reset();
+    useAgentChat.getState().clear();
     router.push("/");
   };
 
