@@ -5,7 +5,18 @@
 > **Microsoft Agents League @ AI Skills Fest 2026 — Reasoning Agents Track**
 > Azure AI Foundry · Foundry IQ · GitHub Copilot
 
-NELB is a reasoning agent for community-level work allocation. It helps people find suitable workers through transparent multi-step reasoning, helps workers recall and query their work history, and provides contextual assistance while work is being performed. Every recommendation comes with a clear explanation of how the decision was reached.
+## The Question
+
+"What if there's a skilled plumber near you, but you don't know it yet?"
+
+"What if you're traveling 5 km without realizing there's a better worker just 2 km away who charges less?"
+
+"What if the system showed you exactly why it picked or recommended those specific workers?'
+
+
+---
+
+NELB is a reasoning agent for community-level work allocation. It helps people find suitable workers through transparent multi-step reasoning, helps workers recall and query their work history, and provides grounded, cited assistance for practical trade work.
 
 ---
 
@@ -14,13 +25,13 @@ NELB is a reasoning agent for community-level work allocation. It helps people f
 
 Matching a person who needs work done with the right worker is a reasoning problem.
 
-The decision involves multiple factors: skills, reliability, availability, distance, budget, previous work history, and fairness. Yet in many communities — especially across the Global South — people still rely on word-of-mouth, personal networks, social media groups, or expensive service providers to find help for everyday tasks. Skilled workers may be available nearby, but there is often little visibility into who is qualified, reliable, available, and fairly priced for a specific job.
+The decision involves multiple factors: skills, reliability, availability, distance, budget, previous work history, and fairness. Yet in many communities — especially across the Global South — this matching is either manual and biased, or delegated to platforms that treat it as a simple search problem.
 
-Existing platforms typically treat worker discovery as a listing or bidding problem. People must sort through applications, workers compete for attention, and the reasoning behind recommendations is often unclear or completely invisible.
+Existing platforms typically treat worker discovery as a listing or bidding problem. People must sort through applications, workers compete for attention, and the reasoning behind recommendations is invisible. The best worker may be undiscoverable because they're new, far away, or simply haven't bid yet.
 
-At the same time, workers accumulate valuable experience through completed jobs, ratings, payments, and client relationships, but that information can be difficult to search and use effectively. They also lack a contextual assistant that can help answer practical work-related questions while they are on site.
+At the same time, workers accumulate valuable experience through completed jobs, ratings, payments, and client relationships, but that information can be difficult to search and use effectively. They have no intelligent way to recall their own history or learn from it.
 
-NELB treats worker allocation as a reasoning problem. Through transparent multi-step reasoning, it evaluates workers based on skills, reliability, availability, distance, budget compatibility, work history, and fairness before producing a ranked shortlist with a complete explanation of how the decision was reached.
+NELB treats worker allocation as a reasoning problem. Through transparent multi-step reasoning, it evaluates workers based on skills, reliability, availability, distance, budget compatibility, work history, and fairness—and shows every step of the decision.
 
 Beyond allocation, NELB provides workers with intelligent work-history recall and contextual job assistance, transforming completed jobs into searchable knowledge and practical guidance.
 
@@ -41,9 +52,9 @@ When you send a message, NELB's orchestrator (running on Azure AI Foundry) reads
 | "How many bags of cement for this slab?" | **Work Assistant** | Answers from a cited knowledge base (Foundry IQ) |
 | "What's my reliability score?" | **Profile Brain** | Reads your profile and stats |
 
-You never pick a tool or change pages. Three messages in the same chat can fire three different brains — the agent decides. That routing decision is itself a reasoning step, and it's what makes NELB feel like one intelligent companion rather than four separate features.
+You never pick a tool or change pages. Three messages in the same chat can fire three different brains — the agent decides. That routing decision is itself a reasoning step, and it's what makes NELB genuinely multi-brain orchestration rather than a single LLM with tools.
 
-**The design principle:** the language model is used for what language models are genuinely good at — understanding intent and explaining outcomes in plain words. The decision that actually matters — *who gets the work* — is handled by transparent, deterministic logic that produces the same answer every time and can be audited line by line. Best of both: natural conversation on the surface, accountable reasoning underneath.
+**The design principle:** the language model is used for what language models are genuinely good at — understanding intent and explaining outcomes in plain words. The decision that actually matters — allocation — is deterministic, auditable, and driven by structured data and fairness constraints.
 
 ---
 
@@ -61,12 +72,12 @@ When a job is posted, NELB doesn't just return the nearest available worker. It 
 | Budget fit | Does their typical price for this work fit your budget? |
 | Fairness | Have they already had plenty of work recently? |
 
-Workers who clear every step are ranked by a weighted score across five factors — **skill, reliability, distance, fairness, and budget fit** — and the result includes a confidence signal that reflects how clear-cut the top choice really was.
+Workers who clear every step are ranked by a weighted score across five factors — **skill, reliability, distance, fairness, and budget fit** — and the result includes a confidence signal that reflects how clear the top choice was.
 
 Three things make this stand out:
 
-- **Fairness is built in, not bolted on.** Workers who've already taken several recent jobs are gently penalised so others in the community get a turn. "No employee left behind" is the literal operating rule of the ranking — visible in the trace, not just a slogan.
-- **Budget is real reasoning.** Each worker's expected price is grounded in their actual earning history for that kind of job. Being cheaper never scores higher — NELB protects worker income instead of driving a race to the bottom. Ask for a painter at an unrealistic budget and NELB honestly tells you no one fits, rather than returning a bad match.
+- **Fairness is built in, not bolted on.** Workers who've already taken several recent jobs are gently penalised so others in the community get a turn. "No employee left behind" is the literal operating principle.
+- **Budget is real reasoning.** Each worker's expected price is grounded in their actual earning history for that kind of job. Being cheaper never scores higher — NELB protects worker income instead of undercutting it.
 - **Reputation counts.** A higher-rated worker outranks an equally reliable but lower-rated one. Newcomers aren't punished for having no ratings yet.
 
 Every recommendation comes with a plain-language explanation of *why the top worker was chosen over the runner-up* — and that explanation is backed by a cited source from the knowledge base.
@@ -86,7 +97,7 @@ Examples include:
 * "How many gardening jobs did I complete this month?"
 * "Which customer asked me to repair a gate in Pretoria East?"
 
-NELB parses the request, identifies relevant entities such as dates, locations, job categories, ratings, and client references, then retrieves and summarizes the relevant records from the worker's history.
+NELB parses the request, identifies relevant entities such as dates, locations, job categories, ratings, and client references, then retrieves and summarizes the relevant records from the worker's job history.
 
 The result is not merely storage of job records, but intelligent recall and retrieval of professional experience.
 
@@ -101,11 +112,11 @@ A practical, on-site buddy for tools, materials, safety, and calculations:
 - *"How many bags of cement for a 3m × 4m slab at 100mm?"*
 - *"What ladder angle is safe when working at height?"*
 
-Answers are **grounded by Foundry IQ** — retrieved from a curated knowledge base and returned with inline citations to the exact source. If the knowledge base doesn't contain the answer, NELB says so rather than guessing. It also refuses anything outside safe civilian work (licensed high-voltage electrical, gas fitting, structural work).
+Answers are **grounded by Foundry IQ** — retrieved from a curated knowledge base and returned with inline citations to the exact source. If the knowledge base doesn't contain the answer, NELB says so honestly rather than guessing.
 
-This is the heart of the required Foundry IQ integration: the knowledge base is a **purpose-built corpus for community trade work**, not a generic web scrape. It even contains NELB's own allocation criteria — so when someone asks *"why does NELB penalise workers with too many recent jobs?"*, the cited answer comes straight from that grounded source. The citation is the proof that the answer is real, not invented.
+This is the heart of the required Foundry IQ integration: the knowledge base is a **purpose-built corpus for community trade work**, not a generic web scrape. It even contains NELB's own allocation reasoning criteria so the system can explain *why* a decision was made.
 
-**Knowledge base coverage (indexed in Azure AI Search):** drill bits & fasteners · cement & concrete · tiling · painting · basic electrical · basic plumbing · carpentry · ladder safety · chemical safety · cleaning · gardening · moving & lifting · general repairs · NELB allocation criteria.
+**Knowledge base coverage (indexed in Azure AI Search):** drill bits & fasteners · cement & concrete · tiling · painting · basic electrical · basic plumbing · carpentry · ladder safety · materials estimation · tool selection · safety practices.
 
 ---
 
@@ -113,8 +124,8 @@ This is the heart of the required Foundry IQ integration: the knowledge base is 
 
 NELB demonstrates multi-step reasoning at two levels:
 
-1. **Understanding & routing** — the agent interprets natural language, classifies intent, extracts structured details, and chooses the right capability. It carries context across a conversation, so "I need a cleaner" followed by "R3000" is understood as one continuous request.
-2. **Deciding & explaining** — the allocation pipeline works through its constraints in sequence, records what happened at each step, and produces a transparent, repeatable result with a grounded explanation.
+1. **Understanding & routing** — the agent interprets natural language, classifies intent, extracts structured details, and chooses the right capability. It carries context across a conversation, so you don't have to repeat yourself.
+2. **Deciding & explaining** — the allocation pipeline works through its constraints in sequence, records what happened at each step, and produces a transparent, repeatable result with grounded citations for the decisive factor.
 
 Nothing important is a black box, and nothing important is left to chance.
 
@@ -191,7 +202,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 | **Work Assistant** — Foundry IQ grounded, cited answers | ❌ Needs Azure AI Foundry + Azure AI Search |
 | Allocation decisive-factor enrichment (citations) | ❌ Needs Foundry IQ |
 
-> Without credentials, you can still run and inspect the deterministic allocation engine end-to-end. The full agent experience (brain-switching, grounded citations) is shown in the demo video and requires Azure resources to reproduce live.
+> Without credentials, you can still run and inspect the deterministic allocation engine end-to-end. The full agent experience (brain-switching, grounded citations) is shown in the demo video and documented in `NELB-Chat-Architecture.md`.
 
 ---
 
@@ -205,7 +216,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 | Sarah Mokoena | Cleaning, Gardening |
 | James Moyo | Carpentry, Tiling, Painting |
 
-**Demo zone — Pretoria, South Africa.** The seeded worker community is in the Pretoria metro. If a search returns no workers, your map pin is outside the zone — use the editable coordinate fields or the **Reset** button to jump back to Pretoria CBD (`-25.7463, 28.1885`).
+**Demo zone — Pretoria, South Africa.** The seeded worker community is in the Pretoria metro. If a search returns no workers, your map pin is outside the zone — use the editable coordinate field to move the pin within Pretoria.
 
 **A 60-second tour:**
 1. **Find Workers** → painting, budget **R5000** → watch the reasoning trace narrow the pool and explain the winner.
@@ -219,7 +230,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 
 ## Tested & verifiable
 
-The allocation engine is covered by a unit-test suite (skills filtering, safety-critical blocking, reliability threshold, fairness penalty, rating blend, budget fit, distance decay, confidence). Run it with:
+The allocation engine is covered by a unit-test suite (skills filtering, safety-critical blocking, reliability threshold, fairness penalty, rating blend, budget fit, distance decay, confidence).
 
 ```bash
 cd backend
