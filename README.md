@@ -5,13 +5,24 @@
 > **Microsoft Agents League @ AI Skills Fest 2026 — Reasoning Agents Track**
 > Azure AI Foundry · Foundry IQ · GitHub Copilot
 
-NELB is a reasoning agent for fair job distribution in community-level gig economies. You talk to it in plain language; it works out what you need, reasons through the decision, and explains every step.
+NELB is a reasoning agent for community-level work allocation. It helps people find suitable workers through transparent multi-step reasoning, helps workers recall and query their work history, and provides contextual assistance while work is being performed. Every recommendation comes with a clear explanation of how the decision was reached.
 
 ---
 
 ## The problem
 
-In informal and community labour markets — especially across the Global South — work is distributed unfairly. A well-connected few capture most of the jobs while skilled people with no visibility are left behind. Employers can't reliably find vetted, nearby workers. Workers have no memory of their own history and no one to help them do a job correctly on site. And nobody can see *why* a worker was chosen — allocation is a black box, so it can't be trusted or audited.
+
+Matching a person who needs work done with the right worker is a reasoning problem.
+
+The decision involves multiple factors: skills, reliability, availability, distance, budget, previous work history, and fairness. Yet in many communities — especially across the Global South — people still rely on word-of-mouth, personal networks, social media groups, or expensive service providers to find help for everyday tasks. Skilled workers may be available nearby, but there is often little visibility into who is qualified, reliable, available, and fairly priced for a specific job.
+
+Existing platforms typically treat worker discovery as a listing or bidding problem. People must sort through applications, workers compete for attention, and the reasoning behind recommendations is often unclear or completely invisible.
+
+At the same time, workers accumulate valuable experience through completed jobs, ratings, payments, and client relationships, but that information can be difficult to search and use effectively. They also lack a contextual assistant that can help answer practical work-related questions while they are on site.
+
+NELB treats worker allocation as a reasoning problem. Through transparent multi-step reasoning, it evaluates workers based on skills, reliability, availability, distance, budget compatibility, work history, and fairness before producing a ranked shortlist with a complete explanation of how the decision was reached.
+
+Beyond allocation, NELB provides workers with intelligent work-history recall and contextual job assistance, transforming completed jobs into searchable knowledge and practical guidance.
 
 NELB addresses all of this in a single agent.
 
@@ -62,15 +73,23 @@ Every recommendation comes with a plain-language explanation of *why the top wor
 
 ---
 
-## Brain 2 — Memory: your work history, in plain language
+## Brain 2 — The Memory Brain (Work History Intelligence)
 
-Workers ask about their own past work and get a real answer:
+NELB transforms a worker's completed job history into a searchable memory system.
 
-- *"Who did I tile a kitchen for last year?"*
-- *"How many cleaning jobs did I do in the last 3 months?"*
-- *"What was my rating on the last plumbing job?"*
+Rather than forcing workers to manually browse records, NELB allows them to ask natural-language questions about past work and receive precise answers grounded in historical job data.
 
-NELB understands the question, looks it up, and answers conversationally. The same history also feeds the fairness engine — so memory and allocation reinforce each other.
+Examples include:
+
+* "Who did I install tiles for last year?"
+* "What was my rating on the last plumbing job?"
+* "How many gardening jobs did I complete this month?"
+* "Which customer asked me to repair a gate in Pretoria East?"
+
+NELB parses the request, identifies relevant entities such as dates, locations, job categories, ratings, and client references, then retrieves and summarizes the relevant records from the worker's history.
+
+The result is not merely storage of job records, but intelligent recall and retrieval of professional experience.
+
 
 ---
 
@@ -218,6 +237,19 @@ python -m pytest tests/test_allocation.py -v
 5. **Real history matters** — ratings and earnings feed back into allocation.
 6. **Confidence must mean something** — it reflects how clear the top choice was, not just its score.
 7. **No employee left behind** — the operating principle behind every part of the system.
+
+---
+
+## Demo & Architecture
+
+
+![NELB Architecture Diagram](./assets/nelb_architecture.png)
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
