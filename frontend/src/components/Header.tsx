@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
@@ -14,7 +14,20 @@ export default function Header() {
   const { currentUser, isLoggedIn, login, logout } = useAuthStore();
   const { isDark, toggle } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Close on any click outside the dropdown
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handle = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [showDropdown]);
 
   const handleLogin = (worker: (typeof DEMO_WORKERS)[0]) => {
     login(worker);
@@ -54,19 +67,18 @@ export default function Header() {
       <div className="relative">
         {!isLoggedIn ? (
           <>
-            <button
-              onClick={() => setShowDropdown((v) => !v)}
-              className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              <LogIn className="w-4 h-4" />
-              Log in
-              <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-            </button>
+            <div ref={dropdownRef} className="relative">
+              <button
+                onClick={() => setShowDropdown((v) => !v)}
+                className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                <LogIn className="w-4 h-4" />
+                Log in
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
 
-            <AnimatePresence>
-              {showDropdown && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+              <AnimatePresence>
+                {showDropdown && (
                   <motion.div
                     initial={{ opacity: 0, y: -8, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -95,9 +107,9 @@ export default function Header() {
                       </button>
                     ))}
                   </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+                )}
+              </AnimatePresence>
+            </div>
           </>
         ) : (
           <div className="flex items-center gap-1.5">
