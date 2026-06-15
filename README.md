@@ -1,3 +1,5 @@
+![NELB Project Banner](./assets/banner.png)
+
 # NELB — No Employee Left Behind
 
 > **Microsoft Agents League @ AI Skills Fest 2026 — Reasoning Agents Track**
