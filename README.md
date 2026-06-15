@@ -7,11 +7,11 @@
 
 ## The Question
 
-"What if there's a pro plumber near you but you don't know it yet?"
+"What if there's a skilled plumber near you, but you don't know it yet?"
 
-"What if you're going 5km unaware that there's someone better at 2km near you at less budget?"
+"What if you're traveling 5 km without realizing there's a better worker just 2 km away who charges less?"
 
-"What if the system showed you why it picked or recommended those specific workers?'
+"What if the system showed you exactly why it picked or recommended those specific workers?'
 
 
 ---
