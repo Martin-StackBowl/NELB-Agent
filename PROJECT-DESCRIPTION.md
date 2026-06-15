@@ -23,7 +23,7 @@ NELB is a reasoning agent that distributes community work fairly and explains ev
 
 1. **Allocation Brain** — a deterministic 6-step reasoning pipeline that ranks workers for a job: self-exclusion → skills → reliability (blended with star ratings) → availability → distance → budget fit → fairness. It returns a ranked shortlist with a full, step-by-step reasoning trace and a margin-based confidence score. This is real, testable Python — not a prompt — so the same inputs always produce the same auditable result.
 
-2. **Memory Brain** — workers query their own job history in plain language ("who did I paint for last year?"). NELB parses intent and queries the database directly.
+2. **Memory Brain** — workers query their own job history in plain language ("who did I paint for this year?"). NELB parses intent and queries the database directly.
 
 3. **Work Assistant Brain** — practical, on-site help ("how many bags of cement for a 3m × 4m slab at 100mm?"). Answers are grounded by **Foundry IQ** — retrieved from a curated knowledge base of 14 trade guides indexed in Azure AI Search — and returned with inline citations. If the knowledge base doesn't contain the answer, NELB says so instead of hallucinating.
 

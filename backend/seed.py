@@ -274,7 +274,7 @@ async def seed():
             ),
             JobHistory(
                 id=uuid.uuid4(),
-                worker_id=workers[1].id,  # Thabo — tiling
+                worker_id=workers[1].id,  # Thabo — tiling (2025, for "last year" memory demo)
                 client_id=clients[2].id,
                 client_name="Mrs. Dlamini",
                 category="tiling",
@@ -282,7 +282,7 @@ async def seed():
                 location="Centurion, Pretoria",
                 latitude=-25.7750,
                 longitude=28.2700,
-                completed_at=now - timedelta(days=60),  # 2 months ago
+                completed_at=now - timedelta(days=365),  # ~June 2025 — "last year"
                 rating=5.0,
                 employer_feedback="Beautiful work",
                 worker_notes="Used large-format porcelain, grouted with charcoal mix",

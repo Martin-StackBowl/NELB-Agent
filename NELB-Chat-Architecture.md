@@ -66,7 +66,7 @@ Allocation Brain fires. The 6-step trace animates. Foundry IQ enriches the expla
 **Message 2** (logged in as Thabo):
 > *"Who did I tile for last year?"*
 
-Memory Brain fires. Parses "tiling" + "last year". Queries job history. Returns the actual record: Mrs Dlamini, Centurion, completed 2 months ago, 5-star rating.
+Memory Brain fires. Parses "tiling" + "last year". Queries job history. Returns the actual record: Mrs Dlamini, Centurion, completed approximately one year ago, 5-star rating.
 
 **Message 3:**
 > *"Which drill bit for a 6mm wall plug in brick?"*

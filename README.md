@@ -48,7 +48,7 @@ When you send a message, NELB's orchestrator (running on Azure AI Foundry) reads
 | You ask… | NELB routes to… | What happens |
 |----------|-----------------|--------------|
 | "Find me a painter, budget R1200" | **Allocation Brain** | Ranks workers through a transparent multi-step pipeline |
-| "Who did I work for last month?" | **Memory Brain** | Recalls your own job history |
+| "Who did I work for this year?" | **Memory Brain** | Recalls your own job history |
 | "How many bags of cement for this slab?" | **Work Assistant** | Answers from a cited knowledge base (Foundry IQ) |
 | "What's my reliability score?" | **Profile Brain** | Reads your profile and stats |
 
@@ -223,7 +223,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 2. Repeat at budget **R500** → NELB honestly returns no match (below market). Raise it again → the shortlist returns.
 3. **Talk to NELB** → send three messages and watch the brain switch:
    - `I need a cleaner for my house, budget R600` → Allocation Brain
-   - `Who did I paint for?` (logged in as Thabo) → Memory Brain
+   - `Who did I paint for this year?` (logged in as Thabo) → Memory Brain
    - `How many bags of cement for a 3m x 4m slab at 100mm?` → Work Assistant, with a citation
 
 ---
