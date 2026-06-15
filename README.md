@@ -11,7 +11,8 @@
 
 "What if you're going 5km unaware that there's someone better at 2km near you at less budget?"
 
-"What if the system that matched you could show its reasoning?"
+"What if the system showed you why it picked or recommended those specific workers?'
+
 
 ---
 
