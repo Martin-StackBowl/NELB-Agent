@@ -28,6 +28,8 @@ export default function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   const [confirmNewChat, setConfirmNewChat] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [animating, setAnimating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { isLoggedIn } = useAuthStore();
@@ -39,6 +41,18 @@ export default function Sidebar() {
   const clearWorkerChat = useWorkerStore((s) => s.clearChat);
 
   useEffect(() => setMounted(true), []);
+
+  // Collapse/expand with a brief "animating" window so the brand icon doesn't
+  // flicker between logo and toggle while the bar resizes under the cursor.
+  const toggleExpanded = () => {
+    setAnimating(true);
+    setExpanded((v) => !v);
+    window.setTimeout(() => setAnimating(false), 380);
+  };
+
+  // Show the toggle in place of the logo only when collapsed, hovering, and not
+  // mid-animation.
+  const showBrandToggle = !expanded && hovering && !animating;
 
   // Contextual "New chat" — targets the chat you're currently viewing.
   const isAgent = pathname === "/agent";
@@ -84,55 +98,75 @@ export default function Sidebar() {
     <motion.aside
       animate={{ width: expanded ? 248 : 68 }}
       transition={{ type: "spring", stiffness: 260, damping: 30 }}
-      className="relative h-screen shrink-0 glass border-r border-border flex flex-col z-30"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      className="relative h-screen shrink-0 glass border-r border-border flex flex-col z-30 overflow-hidden"
     >
-      {/* Brand / toggle */}
-      <div className={`flex items-center h-16 ${expanded ? "px-4 justify-between" : "px-0 justify-center"}`}>
-        <AnimatePresence mode="wait">
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
-              transition={{ duration: 0.15 }}
+      {/* Brand / toggle — logo starts at the same inset as the nav icons
+          (row px-3 + inner px-3), so it lines up with the icon column. */}
+      <div className="flex items-center h-16 px-3 shrink-0">
+        {expanded ? (
+          <>
+            <Link href="/" className="flex items-center gap-3 pl-3 whitespace-nowrap overflow-hidden">
+              <img src="/logo.svg" alt="NELB" className="w-7 h-7 shrink-0" />
+              <span className="font-bold text-lg tracking-tight text-gradient">NELB</span>
+            </Link>
+            <button
+              onClick={toggleExpanded}
+              aria-label="Collapse sidebar"
+              className="ml-auto p-2 rounded-xl text-muted hover:text-foreground hover:bg-foreground/5 transition-colors shrink-0"
             >
-              <Link href="/" className="flex items-center gap-2.5">
-                <img src="/logo.svg" alt="NELB" className="w-7 h-7" />
-                <span className="font-bold text-lg tracking-tight text-gradient">NELB</span>
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-foreground/5 transition-colors"
-          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          <PanelLeft className="w-5 h-5" />
-        </button>
+              <PanelLeft className="w-5 h-5" />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={toggleExpanded}
+            aria-label="Expand sidebar"
+            className="flex items-center pl-2 shrink-0"
+          >
+            <span
+              className={`relative w-9 h-9 grid place-items-center rounded-xl transition-colors ${
+                showBrandToggle ? "hover:bg-foreground/[0.06]" : ""
+              }`}
+            >
+              <img
+                src="/logo.svg"
+                alt="NELB"
+                className="w-7 h-7 transition-opacity duration-150"
+                style={{ opacity: showBrandToggle ? 0 : 1 }}
+              />
+              <PanelLeft
+                className="w-5 h-5 text-muted absolute inset-0 m-auto transition-opacity duration-150"
+                style={{ opacity: showBrandToggle ? 1 : 0 }}
+              />
+            </span>
+          </button>
+        )}
       </div>
 
       {/* New chat */}
-      <div className="px-3">
+      <div className="px-3 shrink-0">
         <button
           onClick={handleNewChat}
-          className={`w-full flex items-center gap-2.5 rounded-xl bg-gradient-to-r ${gradient} text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01] ${
-            expanded ? "px-3.5 py-2.5 justify-start" : "p-2.5 justify-center"
-          }`}
+          className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 bg-gradient-to-r ${gradient} text-white font-medium shadow-lg shadow-nelb-primary/25 hover:shadow-nelb-primary/40 transition-all hover:scale-[1.01]`}
           title={!expanded ? "New chat" : undefined}
         >
           <Plus className="w-5 h-5 shrink-0" />
-          {expanded && <span className="text-sm">New chat</span>}
+          <span className="text-sm whitespace-nowrap overflow-hidden transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+            New chat
+          </span>
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto scroll-area px-3 py-4 space-y-1">
-        {expanded && (
-          <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
-            Brains
-          </p>
-        )}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden scroll-area px-3 py-4 space-y-1">
+        <p
+          className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint whitespace-nowrap overflow-hidden transition-opacity duration-200"
+          style={{ opacity: expanded ? 1 : 0 }}
+        >
+          Brains
+        </p>
         {NAV.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
@@ -141,9 +175,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               title={!expanded ? item.label : undefined}
-              className={`relative flex items-center gap-3 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
-                expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
-              } ${
+              className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
                 active
                   ? "bg-foreground/[0.06] text-foreground"
                   : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
@@ -156,25 +188,26 @@ export default function Sidebar() {
                 />
               )}
               <Icon className="w-5 h-5 shrink-0" />
-              {expanded && <span className="overflow-hidden">{item.label}</span>}
+              <span className="overflow-hidden transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+                {item.label}
+              </span>
             </Link>
           );
         })}
 
         {isLoggedIn && (
           <>
-            <div className={`pt-3 mt-2 ${expanded ? "border-t border-border" : ""}`} />
-            {expanded && (
-              <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
-                Account
-              </p>
-            )}
+            <div className="pt-3 mt-2 border-t border-border" />
+            <p
+              className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-faint whitespace-nowrap overflow-hidden transition-opacity duration-200"
+              style={{ opacity: expanded ? 1 : 0 }}
+            >
+              Account
+            </p>
             <Link
               href="/profile"
               title={!expanded ? "Profile" : undefined}
-              className={`relative flex items-center gap-3 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
-                expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
-              } ${
+              className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
                 pathname === "/profile"
                   ? "bg-foreground/[0.06] text-foreground"
                   : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
@@ -187,20 +220,20 @@ export default function Sidebar() {
                 />
               )}
               <User className="w-5 h-5 shrink-0" />
-              {expanded && <span className="overflow-hidden">Profile</span>}
+              <span className="overflow-hidden transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+                Profile
+              </span>
             </Link>
           </>
         )}
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-3 space-y-1 border-t border-border">
+      <div className="px-3 py-3 border-t border-border shrink-0">
         <Link
           href="/help"
           title={!expanded ? "Help" : undefined}
-          className={`relative flex items-center gap-3 rounded-xl text-sm font-medium transition-colors w-full whitespace-nowrap ${
-            expanded ? "px-3 py-2.5" : "p-2.5 justify-center"
-          } ${
+          className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors w-full whitespace-nowrap ${
             pathname === "/help"
               ? "bg-foreground/[0.06] text-foreground"
               : "text-muted hover:text-foreground hover:bg-foreground/[0.04]"
@@ -213,7 +246,9 @@ export default function Sidebar() {
             />
           )}
           <HelpCircle className="w-5 h-5 shrink-0" />
-          {expanded && <span className="overflow-hidden">Help</span>}
+          <span className="overflow-hidden transition-opacity duration-200" style={{ opacity: expanded ? 1 : 0 }}>
+            Help
+          </span>
         </Link>
       </div>
     </motion.aside>

@@ -21,12 +21,13 @@ def find_decisive_factor(top_recommendations: list[WorkerScore]) -> tuple[str, s
     winner = top_recommendations[0]
     runner_up = top_recommendations[1]
     
-    # Calculate score differences for each dimension
+    # Calculate score differences for each dimension including budget
     factors = {
         "skill": abs(winner.skill_score - runner_up.skill_score),
         "reliability": abs(winner.reliability_score - runner_up.reliability_score),
         "distance": abs(winner.distance_score - runner_up.distance_score),
         "fairness": abs(winner.fairness_score - runner_up.fairness_score),
+        "budget": abs(winner.budget_score - runner_up.budget_score),
     }
     
     # Find the factor with the largest difference
@@ -39,6 +40,7 @@ def find_decisive_factor(top_recommendations: list[WorkerScore]) -> tuple[str, s
         "reliability": "Why does reliability score matter for worker allocation in community gig economies?",
         "distance": "Why does distance affect worker recommendation priority for civilian workers?",
         "fairness": "Why does recent job count affect worker recommendation priority in NELB's fairness engine?",
+        "budget": "Why does budget fit affect worker recommendation priority in NELB's allocation system?",
     }
     
     return (decisive_factor, queries[decisive_factor], score_diff)
@@ -61,8 +63,8 @@ async def enrich_with_foundry_iq(
     
     decisive_factor, query, score_diff = decisive_info
     
-    # Skip enrichment if the difference is negligible (< 5%)
-    if score_diff < 5.0:
+    # Skip enrichment if the difference is negligible (< 2%)
+    if score_diff < 2.0:
         return (base_explanation, [])
     
     try:

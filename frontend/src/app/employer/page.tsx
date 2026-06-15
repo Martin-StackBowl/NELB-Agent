@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Label as ListboxLabel } from "@headlessui/react";
-import { Check, ChevronDown, MapPin, Sparkles, ArrowLeft } from "lucide-react";
+import { Check, ChevronDown, MapPin, Sparkles, ArrowLeft, FileText } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useJobStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth";
@@ -395,14 +395,18 @@ function Results({ onBack }: { onBack: () => void }) {
         {a.citations && a.citations.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border">
             <p className="text-xs text-faint mb-2 font-medium">Supporting references</p>
-            <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
               {a.citations.map((c) => (
-                <div key={c.index} className="flex items-center gap-2 px-3 py-2 glass rounded-xl text-xs text-muted">
-                  <span className="font-semibold text-nelb-primary">{c.index}</span>
-                  <span className="text-faint">·</span>
-                  <span>📄 {c.filename}</span>
-                  <span className="text-faint ml-auto">nelb-allocation-criteria</span>
-                </div>
+                <span
+                  key={c.index}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass text-xs text-muted"
+                >
+                  <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[10px] font-semibold rounded bg-nelb-primary/12 text-nelb-primary">
+                    {c.index}
+                  </span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="text-foreground/80">{c.filename}</span>
+                </span>
               ))}
             </div>
           </div>
