@@ -55,15 +55,15 @@ def parse_recall_intent(query: str) -> dict:
 
     # Time period detection
     if "last year" in query_lower:
-        intent["months_back"] = 12
+        intent["year"] = datetime.now().year - 1
+    elif "this year" in query_lower:
+        intent["year"] = datetime.now().year
     elif "last month" in query_lower:
         intent["months_back"] = 1
     elif "last 3 months" in query_lower or "last three months" in query_lower:
         intent["months_back"] = 3
     elif "last 6 months" in query_lower or "last six months" in query_lower:
         intent["months_back"] = 6
-    elif "this year" in query_lower:
-        intent["months_back"] = datetime.now().month  # months since Jan
     elif "this month" in query_lower:
         intent["months_back"] = 0  # current month only
 
@@ -103,6 +103,7 @@ async def recall_memory(request: RecallRequest, db: AsyncSession) -> RecallRespo
             "a", "an", "in", "at", "to", "is", "was", "were", "last", "first", "any", "all",
             "ive", "i've", "total", "number", "jobs", "job", "much", "work", "about", "tell", "me",
             "show", "please", "whats", "what's", "its", "it's", "them", "that", "this", "some", "been", "has", "had",
+            "completed", "list", "past", "history", "those", "these", "record", "records", "of", "and", "or", "are",
         }
         words = [w.strip("?.,!") for w in query_lower.split() if w.strip("?.,!") not in stop_words and len(w.strip("?.,!")) > 2]
         unknown_term = words[-1] if words else None
@@ -135,6 +136,11 @@ async def recall_memory(request: RecallRequest, db: AsyncSession) -> RecallRespo
 
     if "category" in intent:
         conditions.append(JobHistory.category.ilike(f"%{intent['category']}%"))
+
+    if "year" in intent:
+        start_date = datetime(intent["year"], 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(intent["year"] + 1, 1, 1, tzinfo=timezone.utc)
+        conditions.append(and_(JobHistory.completed_at >= start_date, JobHistory.completed_at < end_date))
 
     if "months_back" in intent:
         if intent["months_back"] == 0:
@@ -173,11 +179,15 @@ async def recall_memory(request: RecallRequest, db: AsyncSession) -> RecallRespo
         query_interpreted += f", category: {intent['category']}"
     if "months_back" in intent:
         query_interpreted += f", time: last {intent['months_back']} months"
+    if "year" in intent:
+        query_interpreted += f", year: {intent['year']}"
 
     if intent.get("wants_count"):
         answer = f"You completed {len(records)} {intent.get('category', '')} job{'s' if len(records) != 1 else ''}"
         if "months_back" in intent:
             answer += f" in the last {intent['months_back']} months"
+        if "year" in intent:
+            answer += f" in {intent['year']}"
         answer += "."
     elif len(records) == 0:
         answer = "No matching jobs found in your history."
