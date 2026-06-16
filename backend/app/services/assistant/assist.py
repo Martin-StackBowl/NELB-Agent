@@ -22,6 +22,7 @@ import httpx
 from openai import AsyncAzureOpenAI
 from app.config import settings
 from app.schemas.agent import AssistRequest, AssistResponse
+from app.services.text_utils import make_snippet as _make_snippet
 
 REFUSED_TOPICS = [
     "high voltage", "gas fitting", "structural engineer", "asbestos",
@@ -240,6 +241,7 @@ async def _call_with_data_sources(request: AssistRequest) -> AssistResponse:
             context = message.get("context", {})
             azure_to_doc_title = {}
             doc_title_to_display = {}
+            doc_title_to_content = {}
             display_index = 1
 
             if context and "citations" in context:
@@ -258,6 +260,7 @@ async def _call_with_data_sources(request: AssistRequest) -> AssistResponse:
                     azure_to_doc_title[i] = doc_title
                     if doc_title not in doc_title_to_display:
                         doc_title_to_display[doc_title] = display_index
+                        doc_title_to_content[doc_title] = _make_snippet(content)
                         display_index += 1
 
             azure_to_display = {
@@ -270,7 +273,7 @@ async def _call_with_data_sources(request: AssistRequest) -> AssistResponse:
             answer = re.sub(r'\[doc(\d+)\]', renumber, answer)
 
             citation_details = [
-                {"index": idx, "filename": title, "content": ""}
+                {"index": idx, "filename": title, "content": doc_title_to_content.get(title, "")}
                 for title, idx in sorted(doc_title_to_display.items(), key=lambda x: x[1])
             ]
 
@@ -453,17 +456,28 @@ async def work_assist(request: AssistRequest) -> AssistResponse:
             context = message.get("context", {})
             azure_to_doc_title = {}  # Azure index -> document title
             doc_title_to_display = {}  # Document title -> display index
+            doc_title_to_content = {}  # Document title -> preview snippet
             display_index = 1
             
             if context and "citations" in context:
+                print(f"[Brain 3] Raw citation count: {len(context['citations'])}")
+                if context["citations"]:
+                    print(f"[Brain 3] First citation keys: {list(context['citations'][0].keys())}")
                 for i, c in enumerate(context["citations"], 1):
                     if i not in used_citations:
                         continue
                     
-                    content = c.get("content", "")
-                    # Extract document title from content
+                    # Azure "on your data" citation objects vary in field naming.
+                    content = (
+                        c.get("content")
+                        or c.get("text")
+                        or c.get("chunk")
+                        or c.get("snippet")
+                        or ""
+                    )
+                    # Extract document title from content or explicit title field
                     lines = content.strip().split("\n")
-                    doc_title = "trade-guide"
+                    doc_title = (c.get("title") or "").strip() or "trade-guide"
                     for line in lines[:5]:
                         if line.startswith("# "):
                             doc_title = line[2:].strip()
@@ -477,6 +491,7 @@ async def work_assist(request: AssistRequest) -> AssistResponse:
                     # Assign display index only to unique documents
                     if doc_title not in doc_title_to_display:
                         doc_title_to_display[doc_title] = display_index
+                        doc_title_to_content[doc_title] = _make_snippet(content, drop_title=doc_title)
                         display_index += 1
             
             # Build azure index -> display index mapping
@@ -501,7 +516,7 @@ async def work_assist(request: AssistRequest) -> AssistResponse:
                 citation_details.append({
                     "index": display_idx,
                     "filename": doc_title,
-                    "content": "",  # We don't show preview in cards
+                    "content": doc_title_to_content.get(doc_title, ""),
                 })
                 citations.append(doc_title)
             

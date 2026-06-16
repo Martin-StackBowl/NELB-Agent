@@ -390,7 +390,7 @@ function Results({ onBack }: { onBack: () => void }) {
           <Sparkles className="w-4 h-4 text-nelb-violet" /> Decision explanation
         </h3>
         <div className="text-sm text-foreground/85 leading-relaxed">
-          <CitedContent content={a.explanation} />
+          <CitedContent content={a.explanation} citations={a.citations} />
         </div>
         {a.citations && a.citations.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border">

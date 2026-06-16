@@ -6,8 +6,10 @@ factor mattered in this specific case.
 """
 
 import httpx
+import re
 from app.config import settings
 from app.schemas.agent import WorkerScore
+from app.services.text_utils import make_snippet as _make_snippet
 
 
 def find_decisive_factor(top_recommendations: list[WorkerScore]) -> tuple[str, str, float] | None:
@@ -131,6 +133,7 @@ async def enrich_with_foundry_iq(
             context = message.get("context", {})
             if context and "citations" in context:
                 doc_title_to_display = {}
+                doc_title_to_content = {}
                 display_idx = 1
                 
                 for i, c in enumerate(context["citations"], 1):
@@ -149,6 +152,7 @@ async def enrich_with_foundry_iq(
                     
                     if doc_title not in doc_title_to_display:
                         doc_title_to_display[doc_title] = display_idx
+                        doc_title_to_content[doc_title] = _make_snippet(content)
                         display_idx += 1
                 
                 # Renumber citations in enrichment text
@@ -174,7 +178,7 @@ async def enrich_with_foundry_iq(
                     citations.append({
                         "index": display_idx,
                         "filename": doc_title,
-                        "content": "",
+                        "content": doc_title_to_content.get(doc_title, ""),
                     })
             
             # Combine base explanation with enrichment

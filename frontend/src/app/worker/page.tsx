@@ -173,10 +173,10 @@ export default function WorkerPage() {
                           text={msg.content}
                           onUpdate={stick}
                           onDone={() => setStreamingKey(null)}
-                          render={(shown) => <CitedContent content={shown} />}
+                          render={(shown) => <CitedContent content={shown} citations={msg.citations} />}
                         />
                       ) : (
-                        <CitedContent content={msg.content} />
+                        <CitedContent content={msg.content} citations={msg.citations} />
                       )}
                     </div>
 
