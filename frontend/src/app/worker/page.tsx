@@ -167,7 +167,7 @@ export default function WorkerPage() {
                     <Wrench className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className={`glass rounded-2xl rounded-tl-sm px-5 py-3.5 text-[15px] leading-relaxed text-foreground/90 ${isStreaming ? "stream-caret" : ""}`}>
+                    <div className="glass rounded-2xl rounded-tl-sm px-5 py-3.5 text-[15px] leading-relaxed text-foreground/90">
                       {isStreaming ? (
                         <StreamingText
                           text={msg.content}

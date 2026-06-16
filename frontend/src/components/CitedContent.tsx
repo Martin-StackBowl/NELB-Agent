@@ -9,19 +9,25 @@ function renderMarkdown(text: string, keyPrefix: string, citations?: Citation[])
   const lines = text.split('\n');
   const elements: React.ReactNode[] = [];
   let currentList: string[] = [];
-  
+  // Track the source line index where the current list started so its key is
+  // stable as more items stream in (prevents React from remounting the <ul>).
+  let listStartIndex = -1;
+
   const flushList = () => {
     if (currentList.length > 0) {
+      const items = currentList;
+      const startIndex = listStartIndex;
       elements.push(
-        <ul key={`${keyPrefix}-list-${elements.length}`} className="list-disc list-inside space-y-1 my-2">
-          {currentList.map((item, i) => (
-            <li key={i} className="text-sm leading-relaxed">
-              {renderInline(item, `${keyPrefix}-li-${i}`, citations)}
+        <ul key={`${keyPrefix}-list-${startIndex}`} className="list-disc list-inside space-y-1 my-2">
+          {items.map((item, i) => (
+            <li key={`${keyPrefix}-li-${startIndex}-${i}`} className="text-sm leading-relaxed">
+              {renderInline(item, `${keyPrefix}-li-${startIndex}-${i}`, citations)}
             </li>
           ))}
         </ul>
       );
       currentList = [];
+      listStartIndex = -1;
     }
   };
 
@@ -46,6 +52,7 @@ function renderMarkdown(text: string, keyPrefix: string, citations?: Citation[])
     }
     // List item (- or *)
     else if (line.match(/^[\-\*]\s/)) {
+      if (listStartIndex === -1) listStartIndex = lineIndex;
       currentList.push(line.slice(2).trim());
     }
     // Empty line

@@ -352,7 +352,7 @@ function MessageRow({
               {brain.label}
             </motion.span>
           )}
-          <div className={isStreaming ? "stream-caret" : ""}>
+          <div>
             {isStreaming ? (
               <StreamingText
                 text={msg.content}
@@ -481,7 +481,7 @@ function AllocationMessage({
           initial={animate ? { opacity: 0, y: 6 } : false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className={`mt-4 pt-4 border-t border-border text-[15px] leading-relaxed text-foreground/90 ${animate ? "stream-caret" : ""}`}
+          className="mt-4 pt-4 border-t border-border text-[15px] leading-relaxed text-foreground/90"
         >
           {animate ? (
             <StreamingText
