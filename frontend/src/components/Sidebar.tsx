@@ -215,7 +215,10 @@ export default function Sidebar() {
             >
               {pathname === "/profile" && !expanded && (
                 <motion.span
-                  layoutId="nav-active"
+                  initial={{ opacity: 0, scaleY: 0.4 }}
+                  animate={{ opacity: 1, scaleY: 1 }}
+                  exit={{ opacity: 0, scaleY: 0.4 }}
+                  transition={{ duration: 0.15 }}
                   className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b ${gradient}`}
                 />
               )}
@@ -241,7 +244,10 @@ export default function Sidebar() {
         >
           {pathname === "/help" && !expanded && (
             <motion.span
-              layoutId="nav-active"
+              initial={{ opacity: 0, scaleY: 0.4 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0.4 }}
+              transition={{ duration: 0.15 }}
               className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b ${gradient}`}
             />
           )}
