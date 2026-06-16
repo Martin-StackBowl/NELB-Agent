@@ -9,6 +9,9 @@ frontend/node_modules/
 frontend/.next/
 frontend/.env.local
 
+# Knowledge base (full docs live in Azure AI Search)
+knowledge-docs/
+
 # IDE
 .vscode/
 .idea/

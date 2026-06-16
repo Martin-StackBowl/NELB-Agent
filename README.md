@@ -156,6 +156,23 @@ See `ARCHITECTURE.md` for the full system diagram.
 
 ---
 
+---
+
+## 🔒 Security & Data Architecture
+
+**Production Knowledge Ingestion:**  
+NELB utilizes **Microsoft Foundry IQ** to securely ingest, permission, and ground our enterprise knowledge base. Raw knowledge documents are hosted exclusively in **Azure AI Search** (`nelb-trade-guides-index`) and accessed through Foundry IQ's secure API with proper authentication and citation tracking.
+
+**Why knowledge docs aren't in this repository:**
+- **Security best practice:** Prevents data reconnaissance and exposure of proprietary intelligence
+- **Separation of concerns:** Code lives in GitHub; data lives in Azure AI Search
+- **Foundry IQ design:** Knowledge retrieval is handled by Microsoft's secure grounded retrieval layer
+
+**Configuration:**  
+All sensitive credentials (Azure API keys, database passwords) are loaded from environment variables. See `backend/.env.example` and `frontend/.env.example` for required configuration.
+
+---
+
 ## Running locally
 
 **Prerequisites:** Docker Desktop · Node.js 20+ · Python 3.11+
