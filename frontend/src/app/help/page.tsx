@@ -97,8 +97,8 @@ const howTo = [
 
 const principles = [
   { icon: Scale, title: "Fairness is structural", desc: "The fairness engine is code, not a policy statement." },
-  { icon: Eye, title: "Explainability is mandatory", desc: "Every decision ships with a reasoning trace. No black boxes." },
-  { icon: BookOpen, title: "Grounded, not guessed", desc: "The assistant cites its sources instead of hallucinating." },
+  { icon: Eye, title: "Explainability is mandatory", desc: "Every decision includes a full reasoning trace." },
+  { icon: BookOpen, title: "Grounded, not guessed", desc: "The assistant cites its sources for every answer." },
 ];
 
 export default function HelpPage() {
