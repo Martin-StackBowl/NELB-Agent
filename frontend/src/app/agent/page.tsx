@@ -222,7 +222,7 @@ export default function AgentPage() {
           onChange={setInput}
           onSend={handleSend}
           isLoading={isLoading}
-          placeholder="Ask NELB anything…"
+          placeholder="Find workers, ask about materials, or check your job history…"
           showLocationToggle
           latitude={latitude}
           longitude={longitude}
