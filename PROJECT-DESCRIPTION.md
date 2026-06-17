@@ -11,7 +11,7 @@
 In informal and community-level labour markets — especially across the Global South — work is distributed unfairly. A small, well-connected few capture most of the available jobs while skilled people with no visibility are left behind. The consequences compound:
 
 - **Employers** have no reliable way to find vetted, nearby workers for everyday tasks (cleaning, painting, plumbing, tiling, repairs).
-- **Workers** have no memory of their own work history and no assistant to help them do a job correctly and safely on site.
+- **Workers** have no queryable record of their own work history and no assistant to help them do a job correctly and safely on site.
 - **Communities** suffer extreme income concentration: a handful of workers monopolise the work, and everyone else is squeezed out.
 - **Nobody** can see *why* a particular worker was chosen — allocation is opaque, so it can't be trusted or audited.
 
@@ -23,7 +23,7 @@ NELB is a reasoning agent that distributes community work fairly and explains ev
 
 1. **Allocation Brain** — a deterministic 6-step reasoning pipeline that ranks workers for a job: self-exclusion → skills → reliability (blended with star ratings) → availability → distance → budget fit → fairness. It returns a ranked shortlist with a full, step-by-step reasoning trace and a margin-based confidence score. This is real, testable Python — not a prompt — so the same inputs always produce the same auditable result.
 
-2. **Memory Brain** — workers query their own job history in plain language ("who did I paint for this year?"). NELB parses intent and queries the database directly.
+2. **Work History Brain** — workers query their own job history in plain language ("who did I paint for this year?"). NELB parses intent and queries the database directly.
 
 3. **Work Assistant Brain** — practical, on-site help ("how many bags of cement for a 3m × 4m slab at 100mm?"). Answers are grounded by **Foundry IQ** — retrieved from a curated knowledge base of 14 trade guides indexed in Azure AI Search — and returned with inline citations. If the knowledge base doesn't contain the answer, NELB says so instead of hallucinating.
 

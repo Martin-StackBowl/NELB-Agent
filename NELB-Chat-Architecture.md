@@ -11,7 +11,7 @@ The Talk to NELB chat is a single natural-language interface that routes to four
 Every message goes to **o4-mini** first. It reads your message, determines intent, extracts structured parameters from unstructured language, and selects the appropriate tool:
 
 - Finding workers for a job → `allocate_job`
-- Asking about past work → `recall_memory`
+- Asking about past work → `recall_memory` (Work History Brain)
 - Practical work question → `work_assist`
 - Profile or stats question → `profile_lookup`
 
@@ -35,7 +35,7 @@ A 6-step deterministic Python pipeline. No LLM in the decision path.
 
 Every elimination is logged. Every score is calculated. The result includes a full reasoning trace — which workers were eliminated at each step and why.
 
-### Brain 2 — Memory Recall
+### Brain 2 — Work History Brain
 Parses natural language intent (category, time period, context) and queries PostgreSQL directly. Returns structured job history records. No LLM in the retrieval path.
 
 ### Brain 3 — Work Assistant
@@ -66,7 +66,7 @@ Allocation Brain fires. The 6-step trace animates. Foundry IQ enriches the expla
 **Message 2** (logged in as Thabo):
 > *"Who did I tile for last year?"*
 
-Memory Brain fires. Parses "tiling" + "last year". Queries job history. Returns the actual record: Mrs Dlamini, Centurion, completed approximately one year ago, 5-star rating.
+Work History Brain fires. Parses "tiling" + "last year". Queries job history. Returns the actual record: Mrs Dlamini, Centurion, completed approximately one year ago, 5-star rating.
 
 **Message 3:**
 > *"Which drill bit for a 6mm wall plug in brick?"*

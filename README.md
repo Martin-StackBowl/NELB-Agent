@@ -48,7 +48,7 @@ When you send a message, NELB's orchestrator (running on Azure AI Foundry) reads
 | You ask… | NELB routes to… | What happens |
 |----------|-----------------|--------------|
 | "Find me a painter, budget R1200" | **Allocation Brain** | Ranks workers through a transparent multi-step pipeline |
-| "Who did I work for this year?" | **Memory Brain** | Recalls your own job history |
+| "Who did I work for this year?" | **Work History Brain** | Recalls your own job history |
 | "How many bags of cement for this slab?" | **Work Assistant** | Answers from a cited knowledge base (Foundry IQ) |
 | "What's my reliability score?" | **Profile Brain** | Reads your profile and stats |
 
@@ -84,9 +84,9 @@ Every recommendation comes with a plain-language explanation of *why the top wor
 
 ---
 
-## Brain 2 — The Memory Brain (Work History Intelligence)
+## Brain 2 — Work History Brain
 
-NELB transforms a worker's completed job history into a searchable memory system.
+NELB transforms a worker's completed job history into a searchable, queryable system.
 
 Rather than forcing workers to manually browse records, NELB allows them to ask natural-language questions about past work and receive precise answers grounded in historical job data.
 
@@ -199,7 +199,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 | Feature | Works without Azure keys? |
 |---------|---------------------------|
 | **Find Workers** — full 6-step allocation, reasoning trace, scoring | ✅ Yes (pure Python) |
-| Memory recall (direct) | ✅ Yes |
+| Work History recall (direct) | ✅ Yes |
 | **Talk to NELB** — the unified agent / brain-switching | ❌ Needs Azure AI Foundry (o4-mini) |
 | **Work Assistant** — Foundry IQ grounded, cited answers | ❌ Needs Azure AI Foundry + Azure AI Search |
 | Allocation decisive-factor enrichment (citations) | ❌ Needs Foundry IQ |
@@ -225,7 +225,7 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 2. Repeat at budget **R500** → NELB honestly returns no match (below market). Raise it again → the shortlist returns.
 3. **Talk to NELB** → send three messages and watch the brain switch:
    - `I need a cleaner for my house, budget R600` → Allocation Brain
-   - `Who did I paint for this year?` (logged in as Thabo) → Memory Brain
+   - `Who did I paint for this year?` (logged in as Thabo) → Work History Brain
    - `How many bags of cement for a 3m x 4m slab at 100mm?` → Work Assistant, with a citation
 
 ---
