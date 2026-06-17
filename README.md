@@ -208,9 +208,6 @@ To enable the Azure-powered features, copy `backend/.env.example` to `backend/.e
 
 ---
 
-## Demo guide
-
-**[📺 Watch the demo video](https://youtu.be/0ffbdOAcp5s?si=nqibWyj1G93R5BXO)**
 
 **Demo accounts** (from the Login button — explore NELB as a worker):
 
@@ -261,10 +258,9 @@ python -m pytest tests/test_allocation.py -v
 ![NELB Architecture Diagram](./assets/nelb_architecture.png)
 
 ---
+## Demo video
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**[📺 Watch the demo video](https://youtu.be/0ffbdOAcp5s?si=nqibWyj1G93R5BXO)**
 
 ---
 
