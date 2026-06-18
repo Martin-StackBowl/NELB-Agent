@@ -40,7 +40,7 @@ async def recall(request: RecallRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/assist", response_model=AssistResponse)
 async def assist(request: AssistRequest):
-    """Brain 3 — Answer a work-related question using GPT-4o with constrained context."""
+    """Brain 3 — Answer a work-related question, grounded by Foundry IQ via gpt-4o-mini."""
     result = await work_assist(request)
     return result
 

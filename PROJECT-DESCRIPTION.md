@@ -49,6 +49,7 @@ Budget reasoning is equally grounded: each worker's expected price comes from th
 | Reasoning agent runtime | **Azure AI Foundry** (o4-mini orchestrator) |
 | Required IQ layer | **Foundry IQ** — Azure AI Search "On Your Own Data" with citations |
 | Grounded answers | GPT-4o-mini via Azure AI Foundry |
+| Allocation enrichment | GPT-4o-mini + Foundry IQ — cited explanation of the decisive factor |
 | Backend | FastAPI, Python 3.11, Pydantic v2, SQLAlchemy async |
 | Database | PostgreSQL 16 (Docker for local dev) |
 | Frontend | Next.js 15, TypeScript, Tailwind CSS v4, Zustand, React Leaflet |

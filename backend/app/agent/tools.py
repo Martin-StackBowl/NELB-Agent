@@ -54,7 +54,12 @@ class NELBMemoryPlugin:
 
 
 class NELBAssistantPlugin:
-    """Brain 3 — The Work Assistant Brain (powered by o4-mini + Foundry IQ)."""
+    """Brain 3 — Work Assistant (Semantic Kernel path, uses the o4-mini chat service).
+
+    Note: the active, grounded Work Assistant route lives in
+    app.services.assistant.assist (gpt-4o-mini + Foundry IQ with citations).
+    This Semantic Kernel plugin answers via o4-mini without retrieval.
+    """
 
     @kernel_function(
         name="work_assist",
@@ -68,7 +73,7 @@ class NELBAssistantPlugin:
         question: str,
         job_context: str = "",
     ) -> str:
-        """Work assistance routes through o4-mini with constrained system prompt."""
+        """Work assistance routes through the kernel's o4-mini chat service (no grounding here)."""
         from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
         from semantic_kernel.contents import ChatHistory
 

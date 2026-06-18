@@ -83,6 +83,7 @@ Assistant Brain fires. Foundry IQ retrieves from the drill bits guide. Answer ap
 | Who gets the job | Python engine | Deterministic, testable, auditable — every run produces the same result |
 | Your job history | PostgreSQL query | Structured data, structured query |
 | Trade knowledge | Foundry IQ + gpt-4o-mini | Grounded retrieval with citations; constrained to indexed source material |
+| Why one worker beat another | Foundry IQ + gpt-4o-mini | Allocation decisive-factor enrichment — a grounded, cited explanation of the winning factor |
 | Your profile stats | PostgreSQL direct read | No generation needed for a database lookup |
 
 ---
