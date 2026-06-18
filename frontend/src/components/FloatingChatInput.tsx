@@ -71,9 +71,9 @@ interface FloatingChatInputProps {
   onRadiusChange?: (radius: number) => void;
   isCentered?: boolean;
   showModeToggle?: boolean;
-  activeMode?: "memory" | "assist";
-  onModeChange?: (mode: "memory" | "assist") => void;
-  memoryRequiresLogin?: boolean;
+  activeMode?: "history" | "assist";
+  onModeChange?: (mode: "history" | "assist") => void;
+  historyRequiresLogin?: boolean;
 }
 
 export default function FloatingChatInput({
@@ -91,7 +91,7 @@ export default function FloatingChatInput({
   showModeToggle = false,
   activeMode = "assist",
   onModeChange,
-  memoryRequiresLogin = false,
+  historyRequiresLogin = false,
 }: FloatingChatInputProps) {
   const [showMap, setShowMap] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -234,20 +234,20 @@ export default function FloatingChatInput({
             {showModeToggle && (
               <div className="inline-flex items-center bg-foreground/[0.06] rounded-full p-0.5">
                 <button
-                  onClick={() => onModeChange?.("memory")}
-                  title={memoryRequiresLogin ? "Log in to use Memory" : undefined}
+                  onClick={() => onModeChange?.("history")}
+                  title={historyRequiresLogin ? "Log in to use Work History" : undefined}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    activeMode === "memory"
+                    activeMode === "history"
                       ? "bg-elevated text-nelb-primary shadow-sm"
-                      : memoryRequiresLogin
+                      : historyRequiresLogin
                       ? "text-faint cursor-default"
                       : "text-muted hover:text-foreground"
                   }`}
                 >
-                  {memoryRequiresLogin
+                  {historyRequiresLogin
                     ? <Lock className="w-3 h-3" />
                     : <History className="w-3 h-3" />}
-                  Memory
+                  Work History
                 </button>
                 <button
                   onClick={() => onModeChange?.("assist")}

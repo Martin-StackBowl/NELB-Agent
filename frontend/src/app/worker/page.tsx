@@ -13,7 +13,7 @@ import { Wrench, FileText, ArrowDown } from "lucide-react";
 
 type Citation = { index: number; filename: string; content: string };
 
-const MEMORY_PROMPTS = [
+const HISTORY_PROMPTS = [
   "Who did I paint for?",
   "How many jobs have I done in total?",
   "What's my reliability score?",
@@ -33,7 +33,7 @@ export default function WorkerPage() {
   const [streamingKey, setStreamingKey] = useState<string | null>(null);
   const mode = store.activeMode;
 
-  const currentMessages = mode === "memory" ? store.memoryChatHistory : store.assistChatHistory;
+  const currentMessages = mode === "history" ? store.historyChatHistory : store.assistChatHistory;
   const isEmpty = currentMessages.length === 0;
 
   const { ref, atBottom, onScroll, scrollToBottom, stick } = useChatScroll(
@@ -48,7 +48,7 @@ export default function WorkerPage() {
     store.setLoading(true);
 
     try {
-      if (mode === "memory" && !isLoggedIn) {
+      if (mode === "history" && !isLoggedIn) {
         store.addChatMessage(
           mode,
           "nelb",
@@ -82,9 +82,9 @@ export default function WorkerPage() {
     store.setLoading(false);
   };
 
-  // Show memory prompts whenever mode is memory (locked or not), assist prompts otherwise.
-  const prompts = mode === "memory" ? MEMORY_PROMPTS : ASSIST_PROMPTS;
-  const accent = mode === "memory" ? "from-nelb-secondary to-nelb-cyan" : "from-nelb-accent to-nelb-pink";
+  // Show history prompts whenever mode is history (locked or not), assist prompts otherwise.
+  const prompts = mode === "history" ? HISTORY_PROMPTS : ASSIST_PROMPTS;
+  const accent = mode === "history" ? "from-nelb-secondary to-nelb-cyan" : "from-nelb-accent to-nelb-pink";
 
   // index of last nelb message (the one allowed to stream)
   const lastNelbIdx = (() => {
@@ -114,7 +114,7 @@ export default function WorkerPage() {
                   ? "Get practical, grounded work guidance from NELB's knowledge base."
                   : isLoggedIn
                   ? "Ask about your job history and profile."
-                  : "Memory requires a login. Switch to Assist for general questions."}
+                  : "Work History requires a login. Switch to Assist for general questions."}
               </p>
 
               <div className="mt-8 grid sm:grid-cols-2 gap-3 text-left">
@@ -246,11 +246,11 @@ export default function WorkerPage() {
           onChange={setInput}
           onSend={handleSend}
           isLoading={store.isLoading}
-          placeholder={mode === "assist" ? "Ask a work-related question…" : isLoggedIn ? "Ask about your history or profile…" : "Log in to use memory…"}
+          placeholder={mode === "assist" ? "Ask a work-related question…" : isLoggedIn ? "Ask about your history or profile…" : "Log in to use work history…"}
           showModeToggle
           activeMode={mode}
           onModeChange={(m) => store.setMode(m)}
-          memoryRequiresLogin={!isLoggedIn}
+          historyRequiresLogin={!isLoggedIn}
         />
       </div>
     </div>

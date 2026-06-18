@@ -74,18 +74,18 @@ interface WorkerState {
   workerId: string;
   workerName: string;
 
-  // Memory (Brain 2)
+  // Work History (Brain 2)
   recallResult: RecallResponse | null;
 
   // Assistant (Brain 3)
   assistResult: AssistResponse | null;
 
   // Chat history — separate per mode
-  memoryChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
+  historyChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
   assistChatHistory: Array<{ role: "user" | "nelb"; content: string; timestamp: number; citations?: Array<{ index: number; filename: string; content: string }> }>;
 
   // Active mode
-  activeMode: "memory" | "assist";
+  activeMode: "history" | "assist";
 
   isLoading: boolean;
   error: string | null;
@@ -94,11 +94,11 @@ interface WorkerState {
   setWorker: (id: string, name: string) => void;
   setRecallResult: (result: RecallResponse) => void;
   setAssistResult: (result: AssistResponse) => void;
-  addChatMessage: (mode: "memory" | "assist", role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
+  addChatMessage: (mode: "history" | "assist", role: "user" | "nelb", content: string, citations?: Array<{ index: number; filename: string; content: string }>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setMode: (mode: "memory" | "assist") => void;
-  clearChat: (mode: "memory" | "assist") => void;
+  setMode: (mode: "history" | "assist") => void;
+  clearChat: (mode: "history" | "assist") => void;
   reset: () => void;
 }
 
@@ -107,9 +107,9 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   workerName: "",
   recallResult: null,
   assistResult: null,
-  memoryChatHistory: [],
+  historyChatHistory: [],
   assistChatHistory: [],
-  activeMode: "assist",   // default to assist — memory requires login
+  activeMode: "assist",   // default to assist — history requires login
   isLoading: false,
   error: null,
 
@@ -118,8 +118,8 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   setAssistResult: (result) => set({ assistResult: result, isLoading: false }),
   addChatMessage: (mode, role, content, citations) =>
     set((state) => ({
-      [mode === "memory" ? "memoryChatHistory" : "assistChatHistory"]: [
-        ...(mode === "memory" ? state.memoryChatHistory : state.assistChatHistory),
+      [mode === "history" ? "historyChatHistory" : "assistChatHistory"]: [
+        ...(mode === "history" ? state.historyChatHistory : state.assistChatHistory),
         { role, content, timestamp: Date.now(), citations },
       ],
     })),
@@ -128,8 +128,8 @@ export const useWorkerStore = create<WorkerState>((set) => ({
   setMode: (mode) => set({ activeMode: mode }),
   clearChat: (mode) =>
     set(
-      mode === "memory"
-        ? { memoryChatHistory: [] }
+      mode === "history"
+        ? { historyChatHistory: [] }
         : { assistChatHistory: [] }
     ),
   reset: () =>
@@ -138,9 +138,9 @@ export const useWorkerStore = create<WorkerState>((set) => ({
       workerName: "",
       recallResult: null,
       assistResult: null,
-      memoryChatHistory: [],
+      historyChatHistory: [],
       assistChatHistory: [],
-      activeMode: "memory",
+      activeMode: "history",
       isLoading: false,
       error: null,
     }),

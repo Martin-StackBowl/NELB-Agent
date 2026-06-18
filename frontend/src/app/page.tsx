@@ -20,15 +20,15 @@ export default function Home() {
     {
       icon: Clock,
       title: "Track Your Work History",
-      brain: "Memory Brain",
+      brain: "Work History Brain",
       brainColor: "bg-nelb-secondary/15 text-nelb-secondary",
-      description: "Ask about past jobs, clients, and ratings in plain language. Your work history becomes searchable memory.",
+      description: "Ask about past jobs, clients, and ratings in plain language. Your work history becomes searchable.",
       example: "\"Who did I tile for last year?\"",
     },
     {
       icon: Wrench,
       title: "Get On-Site Guidance",
-      brain: "Work Assistant",
+      brain: "Assistant Brain",
       brainColor: "bg-nelb-accent/15 text-nelb-accent",
       description: "Ask practical questions about tools, materials, techniques, and safety—with sources cited.",
       example: "\"How much cement for a 4m × 5m slab?\"",

@@ -34,7 +34,7 @@ interface ChatMessage {
 
 const BRAIN_META: Record<string, { label: string; cls: string }> = {
   allocate_job: { label: "Allocation Brain", cls: "bg-nelb-primary/15 text-nelb-primary" },
-  recall_memory: { label: "Memory Brain", cls: "bg-nelb-secondary/15 text-nelb-secondary" },
+  recall_memory: { label: "Work History Brain", cls: "bg-nelb-secondary/15 text-nelb-secondary" },
   work_assist: { label: "Assistant Brain", cls: "bg-nelb-accent/15 text-nelb-accent" },
   profile_lookup: { label: "Profile Brain", cls: "bg-nelb-violet/15 text-nelb-violet" },
 };
@@ -81,7 +81,7 @@ export default function AgentPage() {
     try {
       const result: RunResponse = await runAgent({
         message: userMessage,
-        history: messages.slice(-10).map((m) => ({
+        history: messages.slice(-20).map((m) => ({
           role: m.role === "user" ? ("user" as const) : ("assistant" as const),
           content: m.content,
         })),

@@ -36,7 +36,7 @@ export default function Sidebar() {
   const { activeCount: agentCount, requestReset } = useChatReset();
 
   const workerMode = useWorkerStore((s) => s.activeMode);
-  const memCount = useWorkerStore((s) => s.memoryChatHistory.length);
+  const memCount = useWorkerStore((s) => s.historyChatHistory.length);
   const assistCount = useWorkerStore((s) => s.assistChatHistory.length);
   const clearWorkerChat = useWorkerStore((s) => s.clearChat);
 
@@ -57,19 +57,19 @@ export default function Sidebar() {
   // Contextual "New chat" — targets the chat you're currently viewing.
   const isAgent = pathname === "/agent";
   const isWorker = pathname === "/worker";
-  const workerCount = workerMode === "memory" ? memCount : assistCount;
+  const workerCount = workerMode === "history" ? memCount : assistCount;
 
   // Button + dialog gradient matches the active chat's message colour.
   const gradient = isWorker
-    ? workerMode === "memory"
+    ? workerMode === "history"
       ? "from-nelb-secondary to-nelb-cyan"
       : "from-nelb-accent to-nelb-pink"
     : "from-nelb-primary to-nelb-violet";
 
   const dialogText = isWorker
-    ? workerMode === "memory"
-      ? "Starting a new chat will clear only the Memory conversation. Your Assist conversation remains unchanged."
-      : "Starting a new chat will clear only the Assist conversation. Your Memory conversation remains unchanged."
+    ? workerMode === "history"
+      ? "Starting a new chat will clear only the Work History conversation. Your Assist conversation remains unchanged."
+      : "Starting a new chat will clear only the Assist conversation. Your Work History conversation remains unchanged."
     : "Starting a new chat will clear your current conversation. This can't be undone.";
 
   const handleNewChat = () => {

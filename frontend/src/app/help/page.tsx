@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Lock,
   Sparkles,
+  User,
 } from "lucide-react";
 
 const brains = [
@@ -29,7 +30,7 @@ const brains = [
   },
   {
     icon: History,
-    name: "Memory Brain",
+    name: "Work History Brain",
     color: "text-nelb-secondary",
     tint: "bg-nelb-secondary/10",
     summary:
@@ -44,12 +45,12 @@ const brains = [
       "A practical on-site buddy. Ask about tools, materials, quantities, and safety. Answers are grounded in a curated knowledge base with cited sources — no guesswork. Open to everyone, no login needed.",
   },
   {
-    icon: Shield,
-    name: "Fairness Engine",
+    icon: User,
+    name: "Profile Brain",
     color: "text-nelb-violet",
     tint: "bg-nelb-violet/10",
     summary:
-      "NELB's defining feature. Workers who've already had several jobs recently are ranked lower so others get a fair turn. No single person monopolises the work in a community.",
+      "Reads your worker profile, stats, skills, reliability score, availability, and job counts. Requires login so NELB knows whose profile to read.",
   },
 ];
 
@@ -89,7 +90,7 @@ const howTo = [
     href: "/worker",
     steps: [
       "Use Assist for practical questions — open to everyone.",
-      "Switch to Memory (login required) to query your own job history.",
+      "Switch to Work History (login required) to query your own job history.",
       "Cited sources appear under answers so you can verify them.",
     ],
   },
@@ -145,6 +146,44 @@ export default function HelpPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Fairness Engine */}
+        <section>
+          <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-nelb-violet" /> The Fairness Engine
+          </h2>
+          <p className="text-muted mb-5">
+            NELB's defining feature — built into the Allocation Brain.
+          </p>
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 shrink-0 rounded-xl bg-nelb-violet/10 grid place-items-center">
+                <Scale className="w-6 h-6 text-nelb-violet" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2">No employee left behind</h3>
+                <p className="text-sm text-muted leading-relaxed mb-4">
+                  Workers who've already had several jobs in the last 7 days receive an escalating penalty
+                  in the ranking, so others in the community get a fair turn. This isn't a policy statement —
+                  it's executable code in the allocation pipeline.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1.5 glass rounded-full text-xs font-medium">
+                    <span className="text-foreground">Fairness threshold:</span>{" "}
+                    <span className="text-nelb-violet font-semibold">3 jobs in 7 days</span>
+                  </span>
+                  <span className="px-3 py-1.5 glass rounded-full text-xs font-medium">
+                    <span className="text-foreground">Penalty weight:</span>{" "}
+                    <span className="text-nelb-violet font-semibold">20% of final score</span>
+                  </span>
+                </div>
+                <p className="text-xs text-faint mt-3">
+                  Budget fit: Workers within budget score equally well regardless of price — being cheaper doesn't give an advantage. Only those over-budget are penalized, preventing a race to the bottom.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -238,7 +277,7 @@ export default function HelpPage() {
           <div>
             <h3 className="font-semibold mb-1">Do I need to log in?</h3>
             <p className="text-sm text-muted leading-relaxed">
-              Finding workers and the Work Assistant are open to everyone. Memory — your
+              Finding workers and the Work Assistant are open to everyone. Work History — your
               personal job history and profile stats — requires login so NELB knows whose
               records to read. Use the demo accounts from the <span className="text-foreground font-medium">Log in</span> button
               in the top bar to explore a worker's history.
