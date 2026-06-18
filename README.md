@@ -260,17 +260,11 @@ Watch the full NELB demonstration:
 
 **Direct link:** ## Demo guide
 
-**[📺 Watch the demo video](https://youtu.be/0ffbdOAcp5s?si=nqibWyj1G93R5BXO)**
+**[📺 Watch the demo video](https://www.youtube.com/watch?v=l6AKfkBgxVc)**
 
 ## Diagram
 
 ![NELB Architecture Diagram](./assets/nelb_architecture.png)
-
----.
----
-## Demo video
-
-**[📺 Watch the demo video](https://youtu.be/0ffbdOAcp5s?si=nqibWyj1G93R5BXO)**
 
 ---
 
