@@ -252,12 +252,21 @@ python -m pytest tests/test_allocation.py -v
 7. **No employee left behind** — the operating principle behind every part of the system.
 
 ---
+## Demo Video
 
-## Demo & Architecture
+Watch the full NELB demonstration:
 
+[![Watch the Demo](https://img.youtube.com/vi/Soh3QfD__rA/maxresdefault.jpg)](https://youtu.be/Soh3QfD__rA?si=0MDO0Og24DrSbodZ)
+
+**Direct link:** ## Demo guide
+
+**[📺 Watch the demo video](https://youtu.be/0ffbdOAcp5s?si=nqibWyj1G93R5BXO)**
+
+## Diagram
 
 ![NELB Architecture Diagram](./assets/nelb_architecture.png)
 
+---.
 ---
 ## Demo video
 
