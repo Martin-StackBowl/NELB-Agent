@@ -14,23 +14,10 @@ class Settings(BaseSettings):
     azure_ai_foundry_deployment_chat: str = "gpt-4o-mini"  # Chat model for knowledge base
     azure_ai_foundry_api_version: str = "2025-04-01-preview"
 
-    # Foundry AI Agent (Brain 3 — grounded work assistant with knowledge base)
-    azure_foundry_agent_id: str = ""  # Not used for this agent type
-    azure_foundry_agent_endpoint: str = ""
-    azure_foundry_agent_name: str = "NelbAgent"
-    azure_foundry_agent_version: str = "1"
-
-    # Azure Maps
-    azure_maps_key: str = ""
-
     # Azure AI Search (Foundry IQ knowledge base)
     azure_search_endpoint: str = ""
     azure_search_key: str = ""
     azure_search_knowledge_base: str = "nelb-work-guides"
-
-    # Supabase Auth
-    supabase_url: str = ""
-    supabase_jwt_secret: str = ""
 
     # App config
     app_env: str = "development"
@@ -45,6 +32,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # tolerate stale/extra keys in .env without crashing
 
 
 settings = Settings()

@@ -15,9 +15,6 @@ dependencies = [
     "structlog==24.4.0",
     "httpx==0.28.1",
     "openai>=2.0,<3",
-    "semantic-kernel==1.42.0",
-    "azure-identity==1.19.0",
-    "azure-keyvault-secrets==4.9.0",
 ]
 
 [project.optional-dependencies]
