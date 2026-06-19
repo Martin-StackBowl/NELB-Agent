@@ -260,7 +260,7 @@ Watch the full NELB demonstration:
 
 **Direct link:** ## Demo guide
 
-**[📺 Watch the demo video](https://www.youtube.com/watch?v=l6AKfkBgxVc)**
+**[📺 Watch the demo video](https://www.youtube.com/watch?v=ChCYt6uWxLQ)**
 
 ## Diagram
 
