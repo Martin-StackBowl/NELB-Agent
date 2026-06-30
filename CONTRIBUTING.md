@@ -39,6 +39,14 @@ I am always looking for ways to improve the allocation fairness, the work assist
 - Adhere to PEP 8 standards where possible.
 - Keep the allocation engine completely deterministic. It should not rely on external API calls during the ranking phase unless absolutely necessary and mocked in tests.
 
+## Commit Messages
+
+Please use clear and meaningful commit messages. Example:
+
+- `fix: correct typo in allocation logic`
+- `feat: add distance-based scoring to ranking`
+- `docs: improve contributing guidelines`
+
 ### Frontend (Next.js / TypeScript)
 - I built this with Next.js 15, TypeScript, and Tailwind CSS v4.
 - Follow standard React/Next.js best practices.
