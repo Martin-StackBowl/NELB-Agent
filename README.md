@@ -261,6 +261,3 @@ python -m pytest tests/test_allocation.py -v
 ![NELB Architecture Diagram](./assets/nelb_architecture.png)
 
 ---
-
-*Built for the Microsoft Agents League @ AI Skills Fest 2026 — Reasoning Agents track.*
-*Azure AI Foundry · Foundry IQ · GitHub Copilot*
