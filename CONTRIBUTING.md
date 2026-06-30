@@ -60,4 +60,9 @@ cd backend
 python -m pytest tests/test_allocation.py -v
 ```
 
+## Code of Conduct
+
+We follow the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). 
+By participating, you are expected to uphold this code.
+
 Thank you for helping me ensure that **No Employee is Left Behind**!
